@@ -44,7 +44,7 @@ internal class Program
                     Console.WriteLine("Reader");
                 } else if (pt <= 1)
                 {
-                    if (st <= 1)
+                    if (st == 3)
                     {
                         dataByte += 2 ^ count;
                     }
