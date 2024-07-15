@@ -12,3 +12,4 @@ C:\dev\AircondControl\ByteDatagetter\ByteDatagetter\obj\Debug\net8.0\refint\Byte
 C:\dev\AircondControl\ByteDatagetter\ByteDatagetter\obj\Debug\net8.0\ByteDatagetter.pdb
 C:\dev\AircondControl\ByteDatagetter\ByteDatagetter\obj\Debug\net8.0\ByteDatagetter.genruntimeconfig.cache
 C:\dev\AircondControl\ByteDatagetter\ByteDatagetter\obj\Debug\net8.0\ref\ByteDatagetter.dll
+C:\Dev\AirCondControl\ByteDatagetter\ByteDatagetter\obj\Debug\net8.0\ByteDatagetter.sourcelink.json

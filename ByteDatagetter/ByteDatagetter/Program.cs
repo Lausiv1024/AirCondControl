@@ -1,94 +1,81 @@
 ﻿using System;
 using System.Data;
+using System.Runtime.CompilerServices;
 internal class Program
 {
+    const int DEVIDE_VALUE = 400;
     private static void Main(string[] args)
     {
         if (args.Length == 0)
         {
-            Console.WriteLine("Argument is Empty");
+            Console.WriteLine("Arguments Required!  ByteDataGetter.exe <FilePath>");
             return;
         }
-        string ReadFilePath = args[0];
-        if (!File.Exists(ReadFilePath))
+        if (!File.Exists(args[0]))
         {
-            Console.WriteLine("File not found!");
+            Console.WriteLine("File Not Found!");
             return;
         }
-
-        string rawIRCode;
-
-        using (StreamReader sr = new StreamReader(ReadFilePath))
-        {
-            rawIRCode = sr.ReadToEnd().Replace(Environment.NewLine, "");
-        }
-        string[] rawCodes = rawIRCode.Split(',');
-        int[] ticks = new int[rawCodes.Length];
-        for (int i = 0; i < rawCodes.Length; i++)
-        {
-            ticks[i] = int.Parse(rawCodes[i]) / 400;
-            ticks[i] = ticks[i] == 0 ? 1 : ticks[i];
-        }
+        List<int> Signals = new List<int>();
         int count = 0;
-        bool IsReader = false;
-        bool IsDataTerminated = false;
-        string decodedBinary = "";
-        while (true)
+        int dataByte = 0;
+        //もう逐次読み込みにしちゃったよ
+        using (StreamReader sr = new StreamReader(args[0]))
         {
-            if (count + 1 >= ticks.Length) break;//count + 1が配列の範囲外であれば終了
-
-            IsReader = Isreader(ticks, count);
-            if (!IsReader)
+            while (sr.Peek() >= 0)
             {
-                IsDataTerminated = IsTrailer(ticks, count);
-                if (IsDataTerminated)
+                bool isTrailer = false;
+                //基本pulse n,space n,pulse n,...となるのでその順序で読み込む
+                string? pulseStr = sr.ReadLine();//pulse nullになる可能性は低い
+                string? spaceStr = sr.ReadLine();//space トレーラーが奇数で終わる場合があるのでnullになる加茂
+
+                if (spaceStr == null || spaceStr.Contains("timeout"))//spaceがない or timeout表記ならトレーラーとして認識
                 {
-                    string decodedHex = "";
-                    for (int i = 0; i < decodedBinary.Length; i += 8) 
+                    isTrailer = true;
+                }
+                int pt = int.Parse(pulseStr.Replace("pulse ", "")) / DEVIDE_VALUE;//文字列データ(例：pulse 114514)を数値に変換し、Tに変換
+                int st = 0;
+                if (!isTrailer) st = int.Parse(spaceStr.Replace("space ", "")) / DEVIDE_VALUE;
+                if (st > 8)
+                {
+                    isTrailer = true;
+                }
+
+                if (!isTrailer)
+                {
+                    if (pt == 8 && st == 4)
                     {
-                        int a = Convert.ToInt32(decodedBinary.Substring(i, 8), 2);
-                        decodedHex += a > 10 ? Convert.ToString(a, 16) : $"0{Convert.ToString(a, 16)}";
-                        Console.WriteLine(a > 10 ? Convert.ToString(a, 16) : $"0{Convert.ToString(a, 16)}");
+                        Console.WriteLine("Reader");
+                    } else if (pt <= 1)
+                    {
+                        if (st == 3)
+                        {
+                            dataByte += (int)Math.Pow(2, count);
+                        }
+                        count++;
+                        if (count == 8)
+                        {
+                            Signals.Add(dataByte);
+                            dataByte = 0;
+                            count = 0;
+                        }
                     }
-                    Console.WriteLine(decodedHex);
-                    decodedBinary = string.Empty;
-                    IsDataTerminated = false;
                 }
-                var bit = BitFromRawData(ticks, count);
-                if (bit == string.Empty)
+                else
                 {
-                    IsDataTerminated = true;
+                    if (pt > 1)
+                        break;
+                    foreach(int i in Signals)
+                    {
+                        Console.Write(i > 15 ? Convert.ToString(i, 16) : $"0{Convert.ToString(i, 16)}");
+                    }
+                    Signals.Clear();
+                    count = 0;
+                    dataByte = 0;
+                    Console.WriteLine();
+                    Console.WriteLine("Trailer");
                 }
-                decodedBinary += bit;
-            } else
-            {
-                Console.WriteLine("Reader Detected");
             }
-            count += 2;
         }
-    }
-
-    private static bool IsTrailer(int[] data, int index)//トレーラ(終端)検出
-    {
-        if (data[index] == 1 && data[index + 1] > 3)
-            return true;
-        return false;
-    }
-
-    private static bool Isreader(int[] data, int index)//リーダ検出
-    {
-        if (data.Length <= index - 1)
-            return false;
-        if (data[index] == 8 && data[index + 1] == 4)
-            return true;
-        return false;
-    }
-    private static string BitFromRawData(int[] data, int index)
-    {
-        if (data[index] == 1 && data[index + 1] == 1)
-            return "0";
-        if (data[index] == 1 && data[index + 1] == 3)
-            return "1";
-        return string.Empty;
     }
 }
