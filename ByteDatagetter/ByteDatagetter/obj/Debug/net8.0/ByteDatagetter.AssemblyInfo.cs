@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ByteDatagetter")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+eb9242ac9715f6d0d9c14ad8e3eb8c3a23296350")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+91d99a7a4b158e1ef4002b89272bc1742d4d78db")]
 [assembly: System.Reflection.AssemblyProductAttribute("ByteDatagetter")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ByteDatagetter")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

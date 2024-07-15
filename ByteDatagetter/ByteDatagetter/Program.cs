@@ -19,11 +19,13 @@ internal class Program
         List<int> Signals = new List<int>();
         int count = 0;
         int dataByte = 0;
+        //もう逐次読み込みにしちゃったよ
         using (StreamReader sr = new StreamReader(args[0]))
         {
             while (sr.Peek() >= 0)
             {
                 bool isTrailer = false;
+                //基本pulse n,space n,pulse n,...となるのでその順序で読み込む
                 string? pulseStr = sr.ReadLine();//pulse nullになる可能性は低い
                 string? spaceStr = sr.ReadLine();//space トレーラーが奇数で終わる場合があるのでnullになる加茂
 
@@ -31,7 +33,7 @@ internal class Program
                 {
                     isTrailer = true;
                 }
-                int pt = int.Parse(pulseStr.Replace("pulse ", "")) / DEVIDE_VALUE;
+                int pt = int.Parse(pulseStr.Replace("pulse ", "")) / DEVIDE_VALUE;//文字列データ(例：pulse 114514)を数値に変換し、Tに変換
                 int st = 0;
                 if (!isTrailer) st = int.Parse(spaceStr.Replace("space ", "")) / DEVIDE_VALUE;
                 if (st > 8)
@@ -39,25 +41,30 @@ internal class Program
                     isTrailer = true;
                 }
 
-                if (pt == 8 && st == 4)
+                if (!isTrailer)
                 {
-                    Console.WriteLine("Reader");
-                } else if (pt <= 1)
-                {
-                    if (st == 3)
+                    if (pt == 8 && st == 4)
                     {
-                        dataByte += 2 ^ count;
-                    }
-                    count++;
-                    if (count == 8)
+                        Console.WriteLine("Reader");
+                    } else if (pt <= 1)
                     {
-                        Signals.Add(dataByte);
-                        dataByte = 0;
-                        count = 0;
+                        if (st == 3)
+                        {
+                            dataByte += (int)Math.Pow(2, count);
+                        }
+                        count++;
+                        if (count == 8)
+                        {
+                            Signals.Add(dataByte);
+                            dataByte = 0;
+                            count = 0;
+                        }
                     }
                 }
-                if (isTrailer)
+                else
                 {
+                    if (pt > 1)
+                        break;
                     foreach(int i in Signals)
                     {
                         Console.Write(i > 15 ? Convert.ToString(i, 16) : $"0{Convert.ToString(i, 16)}");
