@@ -1,7 +1,4 @@
-﻿using System;
-using System.Data;
-using System.Runtime.CompilerServices;
-internal class Program
+﻿internal class Program
 {
     const int DEVIDE_VALUE = 400;
     private static void Main(string[] args)
