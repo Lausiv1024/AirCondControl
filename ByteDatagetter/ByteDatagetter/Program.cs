@@ -1,6 +1,12 @@
 ﻿internal class Program
 {
     const int DEVIDE_VALUE = 400;
+    const int PER_TICK = 425;
+    const int ERR = 75;
+
+    static readonly string pulseHeader = "pulse ";
+    static readonly string spaceHeader = "space ";
+
     private static void Main(string[] args)
     {
         if (args.Length == 0)
@@ -30,22 +36,26 @@
                 {
                     isTrailer = true;
                 }
-                int pt = int.Parse(pulseStr.Replace("pulse ", "")) / DEVIDE_VALUE;//文字列データ(例：pulse 114514)を数値に変換し、Tに変換
+                int pt = int.Parse(pulseStr.Replace(pulseHeader, string.Empty)) / DEVIDE_VALUE;//文字列データ(例：pulse 114514)を数値に変換し、Tに変換
+                int pulse = int.Parse(pulseStr.Replace(pulseHeader, string.Empty));
                 int st = 0;
-                if (!isTrailer) st = int.Parse(spaceStr.Replace("space ", "")) / DEVIDE_VALUE;
-                if (st > 8)
+                if (!isTrailer) st = int.Parse(spaceStr.Replace(spaceHeader, string.Empty)) / DEVIDE_VALUE;
+                int space = 0;
+                if (!isTrailer) space = int.Parse(spaceStr.Replace(spaceHeader, string.Empty));
+                //2回目の赤外線信号がある場合があるため、次の信号との大きなブランクをトレーラーとして認識させる処理は必須
+                if (space > PER_TICK * 8)
                 {
                     isTrailer = true;
                 }
 
                 if (!isTrailer)
                 {
-                    if (pt == 8 && st == 4)
+                    if (IsProvidedTick(pulse, 8) && IsProvidedTick(space, 4))
                     {
                         Console.WriteLine("Reader");
-                    } else if (pt <= 1)
+                    } else if (IsProvidedTick(pulse, 1))
                     {
-                        if (st == 3)
+                        if (IsProvidedTick(space, 3))
                         {
                             dataByte += (int)Math.Pow(2, count);
                         }
@@ -62,7 +72,7 @@
                 {
                     if (pt > 1)
                         break;
-                    foreach(int i in Signals)
+                    foreach (int i in Signals)
                     {
                         Console.Write(i > 15 ? Convert.ToString(i, 16) : $"0{Convert.ToString(i, 16)}");
                     }
@@ -74,5 +84,23 @@
                 }
             }
         }
+    }
+
+    private static bool IsProvidedTick(int pulse, int tick)
+    {
+        return NearlyEquals(pulse, tick * PER_TICK, ERR);
+    }
+
+    /// <summary>
+    /// いわゆるニアリーイコールってやつ
+    /// </summary>
+    /// <param name="val">参照値</param>
+    /// <param name="exa">ピッタリの値</param>
+    /// <param name="err">許容誤差</param>
+    /// <returns></returns>
+    private static bool NearlyEquals(int val, int exa, int err)
+    {
+        int subtraction = Math.Abs(val - exa);
+        return subtraction <= err;
     }
 }
