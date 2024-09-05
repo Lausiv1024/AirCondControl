@@ -98,7 +98,7 @@
     /// <param name="exa">ピッタリの値</param>
     /// <param name="err">許容誤差</param>
     /// <returns></returns>
-    private static bool NearlyEquals(int val, int exa, int err)
+    private static bool NearlyEquals(int val, int exa, int err) 
     {
         int subtraction = Math.Abs(val - exa);
         return subtraction <= err;

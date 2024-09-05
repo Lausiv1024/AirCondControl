@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35222.181
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AircondSignalGen", "AircondSignalGen\AircondSignalGen.csproj", "{52EDB23D-39B7-4B62-BF90-2F4B66223760}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{52EDB23D-39B7-4B62-BF90-2F4B66223760}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52EDB23D-39B7-4B62-BF90-2F4B66223760}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52EDB23D-39B7-4B62-BF90-2F4B66223760}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52EDB23D-39B7-4B62-BF90-2F4B66223760}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BB841060-A204-40EA-B29F-797D25F67D5A}
+	EndGlobalSection
+EndGlobal
