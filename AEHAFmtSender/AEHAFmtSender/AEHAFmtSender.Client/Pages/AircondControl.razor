@@ -1,0 +1,30 @@
+﻿@page "/aircond"
+@inject HttpClient Http
+
+<PageTitle>AircondControl</PageTitle>
+<h3>AircondControl</h3>
+
+<div>
+    <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault">
+        <label class="form-check-label" for="flexSwitchCheckDefault">Power</label>
+    </div>
+    <div>
+        <label>設定室温</label>
+        <input type="number" id="degrees" name="degree" min="16" max="31" value="28"/>
+    </div>
+    <h4>タイマー設定</h4>
+    <div>
+        <select class="form-select" aria-label="Timer Select">
+            <option selected>Off</option>
+            <option value="OnTimer">オンタイマー</option>
+            <option value="OffTimer">オフタイマー</option>
+        </select>
+        <div>
+
+        </div>
+    </div>
+</div>
+@code {
+    bool pwr;
+}

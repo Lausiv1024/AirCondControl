@@ -1,13 +1,7 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
 
-namespace AircondSignalGen
+namespace AEHAFmtSender.IRFormats
 {
-    [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
     public class NP081 : RemoteControlBase
     {
         const int CUSTOMER_CODE1 = 0x23;
@@ -19,25 +13,24 @@ namespace AircondSignalGen
         /// <summary>
         /// エアコンの電源ステータス
         /// </summary>
-        [JsonProperty]
         public bool Power { get { return _power; } set { _power = value; } }
         private int coolingDeg = 28;
         /// <summary>
         /// 冷房時設定気温
         /// </summary>
-        [JsonProperty]
-        public int CoolingDegrees { get{ return coolingDeg; } set { coolingDeg = CheckDegrees(value) ? value : throw new InvalidOperationException("設定気温は16~31でなければいけません"); } }
+        public int CoolingDegrees { get { return coolingDeg; } set { coolingDeg = CheckDegrees(value) ? value : throw new InvalidOperationException("設定気温は16~31でなければいけません"); } }
         private int heatingDeg = 20;
         /// <summary>
         /// 暖房時設定気温
         /// </summary>
-        [JsonProperty]
-        public int Heatingdegrees {  get{ return heatingDeg; } set{ heatingDeg = CheckDegrees(value) ? value : throw new InvalidOperationException("設定気温は16~31でなければいけません"); } }
+        public int Heatingdegrees { get { return heatingDeg; } set { heatingDeg = CheckDegrees(value) ? value : throw new InvalidOperationException("設定気温は16~31でなければいけません"); } }
         /// <summary>
         /// 設定気温
         /// </summary>
-        
-        public int Degrees { get{return _mode == OperationMode.COOLING ? CoolingDegrees : _mode == OperationMode.HEATING ? Heatingdegrees : 0;} 
+        [JsonIgnore]
+        public int Degrees
+        {
+            get { return _mode == OperationMode.COOLING ? CoolingDegrees : _mode == OperationMode.HEATING ? Heatingdegrees : 0; }
             set
             {
                 if (_mode == OperationMode.COOLING)
@@ -52,20 +45,17 @@ namespace AircondSignalGen
         /// <summary>
         /// 運転モード
         /// </summary>
-        [JsonProperty]
         public OperationMode OperationMode { get { return _mode; } set { _mode = value; } }
         private TimerMode _timerMode = TimerMode.NONE;
         /// <summary>
         /// タイマー切替
         /// </summary>
-        [JsonProperty]
         public TimerMode TimerMode { get { return _timerMode; } set { _timerMode = value; } }
         private int _timerLength = 0;
         /// <summary>
         /// タイマー時間
         /// </summary>
-        [JsonProperty]
-        public int TimerLength { get { return _timerLength; } set { _timerLength = TimerMode != TimerMode.NONE ? value : 0; } }
+        public int TimerLength { get { return _timerLength; } set { _timerLength = value; } }
 
         public override byte[] GetCurrentSignal()
         {
@@ -78,9 +68,9 @@ namespace AircondSignalGen
                 0x00,
                 (byte)(_power ? 0x20 : 0x0),
                 (byte) _mode,
-                (byte) (CoolingDegrees - 16),
+                (byte) (Degrees - 16),
                 0x26,
-                0x40,
+                0x80,
                 0x00,
                 _timerMode == TimerMode.OFFTIMER ? (byte)(_timerLength / 10) : (byte)0x00,
                 _timerMode == TimerMode.ONTIMER ? (byte)(_timerLength / 10) : (byte)0x00,
@@ -91,11 +81,11 @@ namespace AircondSignalGen
                 0x00,
             ];
             uint errCorrection = 0;
-            foreach(byte b in signal)
+            foreach (byte b in signal)
             {
                 errCorrection += b;
             }
-            signal[17] = (byte) errCorrection;//下位8bitなので上を無理やりそぎ落とす
+            signal[17] = (byte)errCorrection;//下位8bitなので上を無理やりそぎ落とす
             return signal;
         }
 
@@ -120,3 +110,4 @@ namespace AircondSignalGen
         ONTIMER = 0x05
     }
 }
+
