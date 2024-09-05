@@ -3,6 +3,6 @@
 POST {{AEHAFmtSender_HostAddress}}/apiac
 Content-Type: application/json
 {
-  "Power" : true, "OperationMode" : 88, "Degrees" : 25
+  "Power" : true, "OperationMode" : 88, "Degrees" : 26
 }
 ###
