@@ -9,7 +9,6 @@
   <ItemGroup>
     <ProjectReference Include="..\AEHAFmtSender.Client\AEHAFmtSender.Client.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.8" />
-    <PackageReference Include="System.Device.Gpio" Version="3.2.0" />
   </ItemGroup>
 
 </Project>

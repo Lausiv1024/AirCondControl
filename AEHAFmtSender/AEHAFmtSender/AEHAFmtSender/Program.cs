@@ -1,11 +1,14 @@
 using AEHAFmtSender.Client.Pages;
 using AEHAFmtSender.Components;
 using AEHAFmtSender.IRFormats;
+using System.Text.Json;
 using System.Diagnostics;
+using System.Reflection;
 const int TICK = 425;
 string RPiLircPath = "/etc/lirc/lircd.conf.d";
 string ConfigFileBaseFmt = "begin remote\nname aircond\nflags RAW_CODES\neps 30\naeps 100\ngap 200000\ntoggle_bit_mask 0x0\n\nbegin raw_codes\nname aircond\n";
 string ConfigFileExt = "\nend raw_codes\nend remote";
+string ProgramDirectory = Directory.GetParent(Assembly.GetExecutingAssembly().Location).FullName;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -25,9 +28,21 @@ if (app.Environment.IsDevelopment())
 
 app.UseStaticFiles();
 app.UseAntiforgery();
+
+app.MapGet("/acget", () =>
+{
+    if (!File.Exists(Path.Combine(ProgramDirectory, "")))
+        return new NP081();
+    using (StreamReader reader = new StreamReader(Path.Combine(ProgramDirectory, "config.json")))
+    {
+        NP081 nP081 = JsonSerializer.Deserialize<NP081>(reader.ReadToEnd());
+        return nP081;
+    }
+});
 app.MapPost("/apiac", async (NP081 data) =>
 {
     byte[] signalData = data.GetCurrentSignal();
+    Debug.WriteLine(Convert.ToHexString(signalData));
     if (Environment.OSVersion.VersionString.Contains("Windows"))
     {
         string conf = ConfigFileBaseFmt;
@@ -96,6 +111,11 @@ app.MapPost("/apiac", async (NP081 data) =>
         psi.Arguments = $"SEND_ONCE aircond aircond";
         var p = Process.Start(psi);
         await p.WaitForExitAsync();
+
+        using (var sw = new StreamWriter(Path.Combine(ProgramDirectory, "config.json")))
+        {
+            sw.Write(JsonSerializer.Serialize(data));
+        }
         return Results.Ok(Environment.OSVersion);
     }
 });

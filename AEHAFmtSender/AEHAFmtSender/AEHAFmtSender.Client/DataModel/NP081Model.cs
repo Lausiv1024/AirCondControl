@@ -2,14 +2,14 @@
 {
     public class NP081Model
     {
-        public bool Power {  get; set; }
-        public int CoolingDegrees { get; set; }
-        public int HeatingDegrees { get; set; }
+        public bool Power {  get; set; } = false;
+        public int CoolingDegrees { get; set; } = 28;
+        public int HeatingDegrees { get; set; } = 20;
         public int Degree { get; set; }
 
-        public EnumOperationMode OperationMode { get; set; }
-        public EnumTimerMode TimerMode { get; set; }
-        public int TimerLength { get; set; }
+        public EnumOperationMode OperationMode { get; set; } = EnumOperationMode.COOLING;
+        public EnumTimerMode TimerMode { get; set; } = EnumTimerMode.NONE;
+        public int TimerLength { get; set; } = 0;
         
         public NP081Model() { }
         public enum EnumOperationMode

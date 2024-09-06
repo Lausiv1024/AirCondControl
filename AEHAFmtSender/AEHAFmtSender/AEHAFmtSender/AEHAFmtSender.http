@@ -6,3 +6,7 @@ Content-Type: application/json
   "Power" : true, "OperationMode" : 88, "Degrees" : 26
 }
 ###
+
+GET {{AEHAFmtSender_HostAddress}}/acget
+
+###

@@ -74,7 +74,6 @@
     DataModel.NP081Model model = new DataModel.NP081Model();
     bool sendButtonDisabled = false;
 
-
     public void ButtonAdd()
     {
         if (timerValue < MAX_TIMER)
@@ -95,13 +94,13 @@
         model.Power = pwr;
         model.TimerLength = timerValue;
         model.OperationMode = OperationModeSelection;
-        // if (OperationModeSelection == DataModel.NP081Model.EnumOperationMode.HEATING)
-        // {
-        //     model.HeatingDegrees = degree;
-        // }else if (OperationModeSelection == DataModel.NP081Model.EnumOperationMode.COOLING)
-        // {
-        //     model.CoolingDegrees = degree;
-        // }
+        if (OperationModeSelection == DataModel.NP081Model.EnumOperationMode.HEATING)
+        {
+            model.HeatingDegrees = degree;
+        }else if (OperationModeSelection == DataModel.NP081Model.EnumOperationMode.COOLING)
+        {
+            model.CoolingDegrees = degree;
+        }
         model.Degree = degree;
         model.TimerMode = TimerModeSelection;
         model.TimerLength = timerValue;
@@ -120,9 +119,10 @@
         timerDisplayValue = $"{timerValue / 60}:{timerValue % 60}";
     }
 
-    protected override void OnInitialized()
+    protected override async void OnInitialized()
     {
-        base.OnInitialized(); 
+        base.OnInitialized();
+        model = await Http.GetFromJsonAsync<DataModel.NP081Model>("/acget") ?? new DataModel.NP081Model();
         updateTimerValue();
     }
     protected override void OnAfterRender(bool firstRender)

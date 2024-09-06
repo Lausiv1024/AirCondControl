@@ -40,7 +40,7 @@ namespace AEHAFmtSender.IRFormats
                     throw new InvalidOperationException("冷暖房動作時以外の変更は許可されません");
             }
         }
-        private OperationMode _mode;
+        private OperationMode _mode = OperationMode.COOLING;
         /// <summary>
         /// 運転モード
         /// </summary>
