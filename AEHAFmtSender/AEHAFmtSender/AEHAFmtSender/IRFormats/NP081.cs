@@ -18,16 +18,15 @@ namespace AEHAFmtSender.IRFormats
         /// <summary>
         /// 冷房時設定気温
         /// </summary>
-        public int CoolingDegrees { get { return coolingDeg; } set { coolingDeg = CheckDegrees(value) ? value : throw new InvalidOperationException("設定気温は16~31でなければいけません"); } }
+        public int CoolingDegrees { get { return coolingDeg; } set { coolingDeg = CheckDegrees(value) || OperationMode != OperationMode.COOLING ? value : throw new InvalidOperationException("設定気温は16~31でなければいけません"); } }
         private int heatingDeg = 20;
         /// <summary>
         /// 暖房時設定気温
         /// </summary>
-        public int Heatingdegrees { get { return heatingDeg; } set { heatingDeg = CheckDegrees(value) ? value : throw new InvalidOperationException("設定気温は16~31でなければいけません"); } }
+        public int Heatingdegrees { get { return heatingDeg; } set { heatingDeg = CheckDegrees(value) || OperationMode != OperationMode.HEATING ? value : throw new InvalidOperationException("設定気温は16~31でなければいけません"); } }
         /// <summary>
         /// 設定気温
         /// </summary>
-        [JsonIgnore]
         public int Degrees
         {
             get { return _mode == OperationMode.COOLING ? CoolingDegrees : _mode == OperationMode.HEATING ? Heatingdegrees : 0; }

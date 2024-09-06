@@ -18,8 +18,16 @@
 </style>
 <div>
     <div class="form-check form-switch ">
-        <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" @bind="pwr">
+        <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" @bind="pwr"></input>
         <label class="form-check-label" for="flexSwitchCheckDefault">Power</label>
+    </div>
+    <div class="controlContainer">
+        <select class="form-select" aria-label="OperationMode Select" @bind="OperationModeSelection">
+            @foreach(var t in OperationModes)
+            {
+                <option value="@t">@t</option>
+            }
+        </select>
     </div>
     <div class="controlContainer">
         <label>設定室温</label>
@@ -27,10 +35,11 @@
     </div>
     <h4>タイマー設定</h4>
     <div class="controlContainer">
-        <select class="form-select" aria-label="Timer Select">
-            <option selected>Off</option>
-            <option value="OnTimer">オンタイマー</option>
-            <option value="OffTimer">オフタイマー</option>
+        <select class="form-select" aria-label="Timer Select" @bind="TimerModeSelection">
+            @foreach (var t in TimerModes)
+            {
+                <option value="@t">@t</option>
+            }
         </select>
         <div>
             <span class="controlContainer">
@@ -41,22 +50,36 @@
         </div>
     </div>
     <span class="controlContainer">
-        <button id="apply" class="btn btn-primary" @onclick="ButtonApply">Apply</button>
-        <button id="cancel" class="btn btn-primary" @onclick="ButtonCancel">Cancel</button>
+        <button id="apply" class="btn btn-primary" disabled="@sendButtonDisabled" @onclick="ButtonApply">Apply</button>
+        <button id="cancel" class="btn btn-primary" disabled="@sendButtonDisabled" @onclick="ButtonCancel">Cancel</button>
     </span>
 </div>
 @code {
-    bool pwr;
+    bool pwr = false;
     int degree = 28;
     string timerDisplayValue = string.Empty;
-    int timerValue = 0;
+    int timerValue = 30;
     const int MAX_TIMER = 720;
     const int MIN_TIMER = 30;
+    List<DataModel.NP081Model.EnumOperationMode> OperationModes = new List<DataModel.NP081Model.EnumOperationMode> { DataModel.NP081Model.EnumOperationMode.COOLING,
+    DataModel.NP081Model.EnumOperationMode.DEHUMIDIFICATION, DataModel.NP081Model.EnumOperationMode.HEATING, DataModel.NP081Model.EnumOperationMode.VENTILATION};
+    List<string> OperationModeTexts = new List<string> { "冷房", "除湿", "暖房", "送風"};
+
+    int operationSelectCount = 0;
+    DataModel.NP081Model.EnumOperationMode OperationModeSelection = DataModel.NP081Model.EnumOperationMode.COOLING;
+
+    List<DataModel.NP081Model.EnumTimerMode> TimerModes = new List<DataModel.NP081Model.EnumTimerMode> { DataModel.NP081Model.EnumTimerMode.NONE, DataModel.NP081Model.EnumTimerMode.OFFTIMER, DataModel.NP081Model.EnumTimerMode.ONTIMER};
+    DataModel.NP081Model.EnumTimerMode TimerModeSelection = DataModel.NP081Model.EnumTimerMode.NONE;
+
+    DataModel.NP081Model model = new DataModel.NP081Model();
+    bool sendButtonDisabled = false;
+
 
     public void ButtonAdd()
     {
         if (timerValue < MAX_TIMER)
             timerValue += 30;
+
         updateTimerValue();
     }
 
@@ -67,18 +90,45 @@
         updateTimerValue();
     }
 
-    public void ButtonApply()
+    public async void ButtonApply()
     {
-
+        model.Power = pwr;
+        model.TimerLength = timerValue;
+        model.OperationMode = OperationModeSelection;
+        // if (OperationModeSelection == DataModel.NP081Model.EnumOperationMode.HEATING)
+        // {
+        //     model.HeatingDegrees = degree;
+        // }else if (OperationModeSelection == DataModel.NP081Model.EnumOperationMode.COOLING)
+        // {
+        //     model.CoolingDegrees = degree;
+        // }
+        model.Degree = degree;
+        model.TimerMode = TimerModeSelection;
+        model.TimerLength = timerValue;
+        sendButtonDisabled = true;
+        await Http.PostAsJsonAsync("apiac", model);
+        sendButtonDisabled = false;
     }
 
     public void ButtonCancel()
     {
-        
+
     }
 
     private void updateTimerValue()
     {
         timerDisplayValue = $"{timerValue / 60}:{timerValue % 60}";
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized(); 
+        updateTimerValue();
+    }
+    protected override void OnAfterRender(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+
+        updateTimerValue();
     }
 }

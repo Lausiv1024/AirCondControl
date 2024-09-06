@@ -1,4 +1,4 @@
-﻿@AEHAFmtSender_HostAddress = http://192.168.1.22
+﻿@AEHAFmtSender_HostAddress = http://localhost:5195
 #http://localhost:5195
 POST {{AEHAFmtSender_HostAddress}}/apiac
 Content-Type: application/json
