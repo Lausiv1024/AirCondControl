@@ -9,6 +9,30 @@ string RPiLircPath = "/etc/lirc/lircd.conf.d";
 string ConfigFileBaseFmt = "begin remote\nname aircond\nflags RAW_CODES\neps 30\naeps 100\ngap 200000\ntoggle_bit_mask 0x0\n\nbegin raw_codes\nname aircond\n";
 string ConfigFileExt = "\nend raw_codes\nend remote";
 string ProgramDirectory = Directory.GetParent(Assembly.GetExecutingAssembly().Location).FullName;
+
+if (args.Length > 0 &&  args[0] == "CreateRunFile")
+{
+    if (OperatingSystem.IsLinux())
+    {
+        string shellFilePath = Path.Combine(ProgramDirectory, "run.sh");
+        if (File.Exists(shellFilePath)) return;
+        using (var sw = new StreamWriter(shellFilePath))
+        {
+            sw.WriteLine("#!/bin/sh");
+            sw.WriteLine("cd `dirname $0`");
+            sw.WriteLine("./AEHAFmtSender &");
+            sw.WriteLine("sleep 10");
+            sw.WriteLine("sudo systemctl restart nginx");
+        }
+        FileInfo fileInfo = new FileInfo(shellFilePath);
+        Console.WriteLine("Run File created.");
+    } else
+    {
+        Console.WriteLine("このオプションはLinuxのみで有効です");
+    }
+    return;
+}
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -97,7 +121,7 @@ app.MapPost("/apiac", async (NP081 data) =>
             conf += ConfigFileExt;
             writer.Write(conf);
         }
-        await Task.Delay(5);
+        await Task.Delay(10);
         var psi2 = new ProcessStartInfo()
         {
             FileName = "systemctl",

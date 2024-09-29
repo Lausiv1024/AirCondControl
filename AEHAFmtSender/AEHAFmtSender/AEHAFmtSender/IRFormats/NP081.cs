@@ -69,7 +69,7 @@ namespace AEHAFmtSender.IRFormats
                 (byte) _mode,
                 (byte) (Degrees - 16),
                 0x26,
-                0x80,
+                0x40,
                 0x00,
                 _timerMode == TimerMode.OFFTIMER ? (byte)(_timerLength / 10) : (byte)0x00,
                 _timerMode == TimerMode.ONTIMER ? (byte)(_timerLength / 10) : (byte)0x00,
@@ -107,6 +107,12 @@ namespace AEHAFmtSender.IRFormats
         NONE = 0x00,
         OFFTIMER = 0x03,
         ONTIMER = 0x05
+    }
+    public enum DehumidificationAdjustments
+    {
+        NORMAL,
+        WEAK,
+        STRONG
     }
 }
 
