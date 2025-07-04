@@ -4,6 +4,11 @@ namespace AEHAFmtSender.IRFormats
 {
     public class NP081 : RemoteControlBase
     {
+        public NP081() : base("NP081")
+        {
+            
+        }
+        //エアコンのリモコンのモデル的なやつ
         const int CUSTOMER_CODE1 = 0x23;
         const int CUSTOMER_CODE2 = 0xcb;
         const int PARITY_DATA0 = 0x26;

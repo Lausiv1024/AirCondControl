@@ -4,11 +4,14 @@ using AEHAFmtSender.IRFormats;
 using System.Text.Json;
 using System.Diagnostics;
 using System.Reflection;
+using AEHAFmtSender;
+using R3;
 const int TICK = 425;
 string RPiLircPath = "/etc/lirc/lircd.conf.d";
 string ConfigFileBaseFmt = "begin remote\nname aircond\nflags RAW_CODES\neps 30\naeps 100\ngap 200000\ntoggle_bit_mask 0x0\n\nbegin raw_codes\nname aircond\n";
 string ConfigFileExt = "\nend raw_codes\nend remote";
 string ProgramDirectory = Directory.GetParent(Assembly.GetExecutingAssembly().Location).FullName;
+var configManager = new AircondConfigManager<NP081>("NP081");
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -31,13 +34,9 @@ app.UseAntiforgery();
 
 app.MapGet("/acget", () =>
 {
-    if (!File.Exists(Path.Combine(ProgramDirectory, "")))
+    if (configManager.controller == null)
         return new NP081();
-    using (StreamReader reader = new StreamReader(Path.Combine(ProgramDirectory, "config.json")))
-    {
-        NP081 nP081 = JsonSerializer.Deserialize<NP081>(reader.ReadToEnd());
-        return nP081;
-    }
+    return configManager.controller;
 });
 app.MapPost("/apiac", async (NP081 data) =>
 {
@@ -68,6 +67,8 @@ app.MapPost("/apiac", async (NP081 data) =>
         }
         conf += ConfigFileExt;
         Debug.WriteLine(conf);
+        configManager.controller = data;
+        configManager.Save();
         return Results.Ok(data);
     }
     else
@@ -112,12 +113,22 @@ app.MapPost("/apiac", async (NP081 data) =>
         var p = Process.Start(psi);
         await p.WaitForExitAsync();
 
-        using (var sw = new StreamWriter(Path.Combine(ProgramDirectory, "config.json")))
-        {
-            sw.Write(JsonSerializer.Serialize(data));
-        }
+        configManager.controller = data;
+        configManager.Save();
         return Results.Ok(Environment.OSVersion);
     }
+});
+
+app.MapPost("/simplecode", async (SimpleIRCode code) =>
+{
+    var psi = new ProcessStartInfo();
+    psi.FileName = "irsend";
+    psi.UseShellExecute = true;
+    psi.Arguments = $"SEND_ONCE circulator {code.Id}";
+    Console.WriteLine("SEND_ONCE circulator {0}", code.Id);
+    var p = Process.Start(psi);
+    await p.WaitForExitAsync();
+    return Results.Ok("OK");
 });
 
 app.MapRazorComponents<App>()
