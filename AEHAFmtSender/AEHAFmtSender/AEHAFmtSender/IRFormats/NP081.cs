@@ -57,7 +57,7 @@ namespace AEHAFmtSender.IRFormats
         public TimerMode TimerMode { get { return _timerMode; } set { _timerMode = value; } }
         private int _timerLength = 0;
         /// <summary>
-        /// タイマー時間
+        /// タイマー時間 (単位：分)
         /// </summary>
         public int TimerLength { get { return _timerLength; } set { _timerLength = value; } }
 
@@ -76,7 +76,7 @@ namespace AEHAFmtSender.IRFormats
                 0x26,
                 0x80,
                 0x00,
-                _timerMode == TimerMode.OFFTIMER ? (byte)(_timerLength / 10) : (byte)0x00,
+                _timerMode == TimerMode.OFFTIMER ? (byte)(_timerLength / 10) : (byte)0x00, //エアコン上では10分単位で変えるのでそれに合わせる。
                 _timerMode == TimerMode.ONTIMER ? (byte)(_timerLength / 10) : (byte)0x00,
                 (byte) _timerMode,
                 0x10,

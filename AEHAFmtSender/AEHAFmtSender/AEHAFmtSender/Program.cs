@@ -28,8 +28,8 @@ Observable.Interval(TimeSpan.FromSeconds(10))
     .Select(u => configManager.controller ?? new NP081())
     .Where((c) => c.Power)
     .Where((c) => c.TimerMode != TimerMode.NONE)
-    .Where(c => DateTime.Now.Hour == TimerStarted.AddHours(c.TimerLength / 60).Hour)
-    .Where(c => DateTime.Now.Minute == TimerStarted.AddHours(c.TimerLength / 60).Minute)
+    .Where(c => DateTime.Now.Hour == TimerStarted.AddMinutes(c.TimerLength).Hour)
+    .Where(c => DateTime.Now.Minute == TimerStarted.AddMinutes(c.TimerLength).Minute)
     .Subscribe(async(c) =>
 {
     c.TimerMode = TimerMode.NONE;
@@ -73,18 +73,12 @@ app.MapPost("/apiac", async (NP081 data) =>
         if (data.TimerStatusChanged(configManager.controller) && data.TimerMode != TimerMode.NONE)
         {
             TimerStarted = DateTime.Now;
-            if (automationConfig.Config.AircondPwrLink && (data.TimerMode == TimerMode.ONTIMER
-            || (configManager.controller.TimerMode == TimerMode.ONTIMER && data.TimerMode == TimerMode.NONE)))
-            {
-                await sendCirculatorSignal("power");
-            }
         }
     }
     configManager.controller = data;
     configManager.Save();
 
     return Results.Ok(Environment.OSVersion);
-    
 });
 
 app.MapPost("/simplecode", async (SimpleIRCode code) =>

@@ -9,7 +9,10 @@
 
         public EnumOperationMode OperationMode { get; set; } = EnumOperationMode.COOLING;
         public EnumTimerMode TimerMode { get; set; } = EnumTimerMode.NONE;
-        public int TimerLength { get; set; } = 0;
+        /// <summary>
+        /// タイマー時間(単位：分)
+        /// </summary>
+        public int TimerLength { get; set; } = 0; 
         
         public NP081Model() { }
         public enum EnumOperationMode
