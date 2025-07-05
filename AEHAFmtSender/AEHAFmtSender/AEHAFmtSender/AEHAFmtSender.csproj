@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\AEHAFmtSender.Shared\AEHAFmtSender.Shared.csproj" />
     <ProjectReference Include="..\AEHAFmtSender.Client\AEHAFmtSender.Client.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.8" />
     <PackageReference Include="R3" Version="1.3.0" />

@@ -97,6 +97,11 @@ namespace AEHAFmtSender.IRFormats
         {
             return val >= MIN_DEGREE && val <= MAX_DEGREE;
         }
+
+        public bool TimerStatusChanged(NP081? old)
+            => (old != null && TimerMode != old.TimerMode && TimerLength != old.TimerLength);
+        public bool PowerStateChanged(NP081? old)
+            => (old != null && Power != old.Power);
     }
 
     public enum OperationMode

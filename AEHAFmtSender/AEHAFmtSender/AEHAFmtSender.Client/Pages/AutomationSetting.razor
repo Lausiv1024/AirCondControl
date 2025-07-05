@@ -1,0 +1,37 @@
+﻿@page "/automationsetting"
+@using AEHAFmtSender.Shared
+@inject HttpClient Http
+
+<h3>AutomationSetting</h3>
+
+<div>
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault" value="@cfg.AircondPwrLink" @onchange="OnValueChanged" />
+        <label class="form-check-label" for="flexSwitchCheckDefault">
+            エアコンとサーキュレータの電源状態を同期
+        </label>
+    </div>
+
+</div>
+
+@code {
+    bool aircondPwrLink = false;
+    AutomationConfig cfg = new AutomationConfig();
+    private async void OnValueChanged(ChangeEventArgs e)
+    {
+        cfg.AircondPwrLink =(bool) e.Value;
+        await Http.PostAsJsonAsync("automationconfig", cfg);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        base.OnInitialized();
+        cfg = await Http.GetFromJsonAsync<AutomationConfig>("/automationconfig") ?? new AutomationConfig();
+        aircondPwrLink = cfg.AircondPwrLink;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        aircondPwrLink = cfg.AircondPwrLink;
+    }
+}

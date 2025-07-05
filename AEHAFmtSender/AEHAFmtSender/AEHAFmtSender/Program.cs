@@ -6,6 +6,8 @@ using System.Diagnostics;
 using System.Reflection;
 using AEHAFmtSender;
 using R3;
+using AEHAFmtSender.Shared;
+using AEHAFmtSender.Automation;
 const int TICK = 425;
 string RPiLircPath = "/etc/lirc/lircd.conf.d";
 string ConfigFileBaseFmt = "begin remote\nname aircond\nflags RAW_CODES\neps 30\naeps 100\ngap 200000\ntoggle_bit_mask 0x0\n\nbegin raw_codes\nname aircond\n";
@@ -19,6 +21,25 @@ builder.Services.AddHttpClient().AddRazorComponents()
     .AddInteractiveWebAssemblyComponents();
 
 var app = builder.Build();
+var automationConfig = new AutomationConfigManager();
+DateTime? TimerStarted = null;
+
+Observable.Interval(TimeSpan.FromSeconds(10))
+    .Select(u => configManager.controller ?? new NP081())
+    .Where((c) => c.Power)
+    .Where((c) => c.TimerMode != TimerMode.NONE)
+    .Where(c => TimerStarted != null && DateTime.Now.Hour == TimerStarted.Value.AddHours(c.TimerLength / 60).Hour)
+    .Where(c => TimerStarted != null && DateTime.Now.Minute == TimerStarted.Value.AddHours(c.TimerLength / 60).Minute)
+    .Subscribe(async(c) =>
+{
+    c.TimerMode = TimerMode.NONE;
+    if (c.TimerMode == TimerMode.OFFTIMER)
+        c.Power = false; //オフタイマならエアコンの電源ごと切れる
+    if (automationConfig.Config.AircondPwrLink)
+        await sendCirculatorSignal("power");
+    configManager.controller = c;
+    configManager.Save();
+});
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -67,6 +88,16 @@ app.MapPost("/apiac", async (NP081 data) =>
         }
         conf += ConfigFileExt;
         Debug.WriteLine(conf);
+        if (data.TimerStatusChanged(configManager.controller))
+        {
+            if (data.TimerMode == TimerMode.NONE)
+            {
+                TimerStarted = null;
+            } else
+            {
+                TimerStarted = DateTime.Now;
+            }
+        }
         configManager.controller = data;
         configManager.Save();
         return Results.Ok(data);
@@ -112,23 +143,55 @@ app.MapPost("/apiac", async (NP081 data) =>
         psi.Arguments = $"SEND_ONCE aircond aircond";
         var p = Process.Start(psi);
         await p.WaitForExitAsync();
-
+        if (automationConfig.Config.AircondPwrLink && data.PowerStateChanged(configManager.controller))
+            await sendCirculatorSignal("power");
+        if (data.TimerStatusChanged(configManager.controller))
+        {
+            if (data.TimerMode == TimerMode.NONE)
+            {
+                TimerStarted = null;
+            } else
+            {
+                TimerStarted = DateTime.Now;
+            }
+        }
         configManager.controller = data;
         configManager.Save();
+
         return Results.Ok(Environment.OSVersion);
     }
 });
 
 app.MapPost("/simplecode", async (SimpleIRCode code) =>
 {
+    await sendCirculatorSignal(code.Id);
+    return Results.Ok("OK");
+});
+
+async Task sendCirculatorSignal(string? signal)
+{
+    if (signal == null)
+        return;
     var psi = new ProcessStartInfo();
     psi.FileName = "irsend";
     psi.UseShellExecute = true;
-    psi.Arguments = $"SEND_ONCE circulator {code.Id}";
-    Console.WriteLine("SEND_ONCE circulator {0}", code.Id);
+    psi.Arguments = $"SEND_ONCE circulator {signal}";
+    Console.WriteLine("SEND_ONCE circulator {0}", signal);
     var p = Process.Start(psi);
     await p.WaitForExitAsync();
-    return Results.Ok("OK");
+}
+
+app.MapGet("/automationconfig", () =>
+{
+    if (automationConfig.Config == null)
+        return new AutomationConfig();
+    return automationConfig.Config;
+});
+
+app.MapPost("/automationconfig", (AutomationConfig cfg) =>
+{
+    automationConfig.Config = cfg;
+    automationConfig.Save();
 });
 
 app.MapRazorComponents<App>()
