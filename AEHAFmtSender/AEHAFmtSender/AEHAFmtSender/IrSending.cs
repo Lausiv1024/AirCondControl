@@ -21,10 +21,10 @@ public class IrSending
     public static async Task SendByte(byte[] data)
     {
         var d = CreateSignalData(data);
-        if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+        if (Environment.OSVersion.VersionString.Contains("Windows"))
         {
             SendByteWin(d);
-        } else if (Environment.OSVersion.Platform == PlatformID.Unix)
+        } else
         {
             await SendByteRPi(d);
         }
@@ -54,8 +54,8 @@ public class IrSending
     /// <returns></returns>
     private static async Task SendByteRPi(string data)
     {
-        using var sw = new StreamWriter(Path.Combine(RPiLircDirPath, LircFileName));
-        sw.Write(data);
+        using (var sw = new StreamWriter(Path.Combine(RPiLircDirPath, LircFileName)))
+            sw.Write(data);
         await Task.Delay(5);
         var psi2 = new ProcessStartInfo()
         {
@@ -105,5 +105,23 @@ public class IrSending
         }
         conf += ConfigFileExt;
         return conf;
+    }
+
+    public static async Task sendCirculatorSignal(string? signal)
+    {
+        if (signal == null)
+            return;
+        if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+        {
+            Console.WriteLine(signal);
+            return;
+        }
+        var psi = new ProcessStartInfo();
+        psi.FileName = "irsend";
+        psi.UseShellExecute = true;
+        psi.Arguments = $"SEND_ONCE circulator {signal}";
+        Console.WriteLine("SEND_ONCE circulator {0}", signal);
+        var p = Process.Start(psi);
+        await p.WaitForExitAsync();
     }
 }

@@ -99,7 +99,7 @@ namespace AEHAFmtSender.IRFormats
         }
 
         public bool TimerStatusChanged(NP081? old)
-            => (old != null && TimerMode != old.TimerMode && TimerLength != old.TimerLength);
+            => (old != null && (TimerMode != old.TimerMode || TimerLength != old.TimerLength));
         public bool PowerStateChanged(NP081? old)
             => (old != null && Power != old.Power);
     }

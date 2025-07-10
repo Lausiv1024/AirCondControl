@@ -32,11 +32,11 @@ Observable.Interval(TimeSpan.FromSeconds(10))
     .Where(c => DateTime.Now.Minute == TimerStarted.AddMinutes(c.TimerLength).Minute)
     .Subscribe(async(c) =>
 {
-    c.TimerMode = TimerMode.NONE;
     if (c.TimerMode == TimerMode.OFFTIMER)
         c.Power = false; //オフタイマならエアコンの電源ごと切れる
+    c.TimerMode = TimerMode.NONE;
     if (automationConfig.Config.AircondPwrLink)
-        await sendCirculatorSignal("power");
+        await IrSending.sendCirculatorSignal("power");
     configManager.controller = c;
     configManager.Save();
 });
@@ -68,12 +68,16 @@ app.MapPost("/apiac", async (NP081 data) =>
 
     if (configManager.controller != null)
     {
-        if (automationConfig.Config.AircondPwrLink && data.PowerStateChanged(configManager.controller))
-            await sendCirculatorSignal("power");
-        if (data.TimerStatusChanged(configManager.controller) && data.TimerMode != TimerMode.NONE)
-        {
+        bool pwrStateChanged = data.PowerStateChanged(configManager.controller);
+        bool timerStatusChanged = data.TimerStatusChanged(configManager.controller);
+        if (automationConfig.Config.AircondPwrLink
+        && (pwrStateChanged
+        || (timerStatusChanged && (data.TimerMode == TimerMode.ONTIMER || configManager.controller.TimerMode == TimerMode.ONTIMER))
+        ))
+            await IrSending.sendCirculatorSignal("power");
+        if (timerStatusChanged && data.TimerMode != TimerMode.NONE)
             TimerStarted = DateTime.Now;
-        }
+
     }
     configManager.controller = data;
     configManager.Save();
@@ -83,22 +87,9 @@ app.MapPost("/apiac", async (NP081 data) =>
 
 app.MapPost("/simplecode", async (SimpleIRCode code) =>
 {
-    await sendCirculatorSignal(code.Id);
+    await IrSending.sendCirculatorSignal(code.Id);
     return Results.Ok("OK");
 });
-
-async Task sendCirculatorSignal(string? signal)
-{
-    if (signal == null)
-        return;
-    var psi = new ProcessStartInfo();
-    psi.FileName = "irsend";
-    psi.UseShellExecute = true;
-    psi.Arguments = $"SEND_ONCE circulator {signal}";
-    Console.WriteLine("SEND_ONCE circulator {0}", signal);
-    var p = Process.Start(psi);
-    await p.WaitForExitAsync();
-}
 
 app.MapGet("/automationconfig", () =>
 {
