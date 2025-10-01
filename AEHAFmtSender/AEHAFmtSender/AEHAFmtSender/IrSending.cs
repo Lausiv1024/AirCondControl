@@ -56,7 +56,7 @@ public class IrSending
     {
         using (var sw = new StreamWriter(Path.Combine(RPiLircDirPath, LircFileName)))
             sw.Write(data);
-        await Task.Delay(5);
+        await Task.Delay(20);
         var psi2 = new ProcessStartInfo()
         {
             FileName = "systemctl",
@@ -116,6 +116,7 @@ public class IrSending
             Console.WriteLine(signal);
             return;
         }
+        await Task.Delay(50);
         var psi = new ProcessStartInfo();
         psi.FileName = "irsend";
         psi.UseShellExecute = true;

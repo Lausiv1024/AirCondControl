@@ -6,11 +6,12 @@
 
 <div>
     <div class="form-check">
-        <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault" value="@cfg.AircondPwrLink" @onchange="OnValueChanged" />
+        <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault" @bind=aircondPwrLink/>
         <label class="form-check-label" for="flexSwitchCheckDefault">
             エアコンとサーキュレータの電源状態を同期
         </label>
     </div>
+    <button class="btn btn-primary" @onclick="OnApplyClick">適用</button>
 
 </div>
 
@@ -19,19 +20,19 @@
     AutomationConfig cfg = new AutomationConfig();
     private async void OnValueChanged(ChangeEventArgs e)
     {
-        cfg.AircondPwrLink =(bool) e.Value;
-        await Http.PostAsJsonAsync("automationconfig", cfg);
+        //cfg.AircondPwrLink =(bool) e.Value;
+        //await Http.PostAsJsonAsync("automationconfig", cfg);
     }
 
     protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
         cfg = await Http.GetFromJsonAsync<AutomationConfig>("/automationconfig") ?? new AutomationConfig();
         aircondPwrLink = cfg.AircondPwrLink;
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private async void OnApplyClick()
     {
-        aircondPwrLink = cfg.AircondPwrLink;
+        cfg.AircondPwrLink = aircondPwrLink;
+        await Http.PostAsJsonAsync("automationconfig", cfg);
     }
 }

@@ -8,6 +8,7 @@ using AEHAFmtSender;
 using R3;
 using AEHAFmtSender.Shared;
 using AEHAFmtSender.Automation;
+using Microsoft.Extensions.Logging;
 const int TICK = 425;
 string RPiLircPath = "/etc/lirc/lircd.conf.d";
 string ConfigFileBaseFmt = "begin remote\nname aircond\nflags RAW_CODES\neps 30\naeps 100\ngap 200000\ntoggle_bit_mask 0x0\n\nbegin raw_codes\nname aircond\n";
@@ -15,7 +16,8 @@ string ConfigFileExt = "\nend raw_codes\nend remote";
 string ProgramDirectory = Directory.GetParent(Assembly.GetExecutingAssembly().Location).FullName;
 var configManager = new AircondConfigManager<NP081>("NP081");
 var builder = WebApplication.CreateBuilder(args);
-
+using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole());
+var logger = factory.CreateLogger("Program");
 // Add services to the container.
 builder.Services.AddHttpClient().AddRazorComponents()
     .AddInteractiveWebAssemblyComponents();
@@ -77,7 +79,6 @@ app.MapPost("/apiac", async (NP081 data) =>
             await IrSending.sendCirculatorSignal("power");
         if (timerStatusChanged && data.TimerMode != TimerMode.NONE)
             TimerStarted = DateTime.Now;
-
     }
     configManager.controller = data;
     configManager.Save();
@@ -101,11 +102,13 @@ app.MapGet("/automationconfig", () =>
 app.MapPost("/automationconfig", (AutomationConfig cfg) =>
 {
     automationConfig.Config = cfg;
+    logger.LogInformation("Automation Config Updated");
     automationConfig.Save();
 });
 
 app.MapRazorComponents<App>()
     .AddInteractiveWebAssemblyRenderMode()
     .AddAdditionalAssemblies(typeof(AEHAFmtSender.Client._Imports).Assembly);
+
 
 app.Run();
