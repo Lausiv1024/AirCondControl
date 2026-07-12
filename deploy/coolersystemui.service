@@ -1,0 +1,35 @@
+[Unit]
+Description=CoolerSystemUI Avalonia DRM kiosk
+# API 起動後に開始する
+After=aehafmtsender.service systemd-user-sessions.service getty@tty1.service
+Wants=aehafmtsender.service
+# tty1 を占有してキオスク表示するため getty と排他
+Conflicts=getty@tty1.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/coolersystemui
+ExecStart=/opt/coolersystemui/CoolerSystemUI --drm
+# 起動方法・接続先・DRM カードを環境変数で指定
+Environment=COOLER_DRM=1
+Environment=COOLER_API_BASEURL=http://127.0.0.1:5195
+Environment=COOLER_DRI_CARD=/dev/dri/card0
+# 画面スケーリング(必要なら 1.5 等に変更)
+Environment=COOLER_DRM_SCALING=1.0
+# 画面回転(度): パネルが上下逆付けのため 180。0/90/180/270 が有効
+Environment=COOLER_DRM_ROTATE=180
+# 無操作で自動消灯するまでの秒数(焼け防止)。0 で自動消灯なし
+Environment=COOLER_BLANK_TIMEOUT=60
+# DRM(/dev/dri)・入力(libinput)へアクセスするための専用ユーザとグループ
+User=cooler
+SupplementaryGroups=video render input
+# tty1 をこのサービスに割り当ててキオスク全画面表示
+TTYPath=/dev/tty1
+StandardInput=tty
+StandardOutput=journal
+StandardError=journal
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,18 @@
+[Unit]
+Description=AEHAFmtSender Air Conditioner IR API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/aehafmtsender
+ExecStart=/opt/aehafmtsender/AEHAFmtSender
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=ASPNETCORE_URLS=http://127.0.0.1:5195
+# /etc/lirc への書き込み・`systemctl restart lircd`・`irsend` の実行に root 権限が必要
+User=root
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

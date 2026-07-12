@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:CoolerSystemUI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="430"
+             x:Class="CoolerSystemUI.Views.AutomationView"
+             x:DataType="vm:AutomationViewModel">
+
+    <Grid RowDefinitions="*,Auto" Margin="16">
+        <StackPanel Grid.Row="0" Spacing="20" VerticalAlignment="Center">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="電源連動" FontSize="20" />
+                    <TextBlock Text="エアコンとサーキュレーターの電源を同期" FontSize="13"
+                               Foreground="#AAAAAA" />
+                </StackPanel>
+                <ToggleSwitch Grid.Column="1" IsChecked="{Binding AircondPwrLink}"
+                              OnContent="ON" OffContent="OFF" />
+            </Grid>
+
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="自動電源" FontSize="20" />
+                    <TextBlock Text="自動でエアコンの電源を制御" FontSize="13"
+                               Foreground="#AAAAAA" />
+                </StackPanel>
+                <ToggleSwitch Grid.Column="1" IsChecked="{Binding AircondAutoPower}"
+                              OnContent="ON" OffContent="OFF" />
+            </Grid>
+        </StackPanel>
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto" Margin="0,8,0,0" ColumnSpacing="8">
+            <TextBlock Grid.Column="0" Text="{Binding StatusMessage}"
+                       VerticalAlignment="Center" Foreground="#AAAAAA" />
+            <Button Grid.Column="1" Classes="touch" Content="再取得"
+                    Command="{Binding LoadCommand}" IsEnabled="{Binding !IsBusy}" />
+            <Button Grid.Column="2" Classes="touch" Content="保存" Width="140"
+                    Command="{Binding ApplyCommand}" IsEnabled="{Binding !IsBusy}" />
+        </Grid>
+    </Grid>
+</UserControl>

@@ -61,17 +61,17 @@
     int timerValue = 30;
     const int MAX_TIMER = 720;
     const int MIN_TIMER = 30;
-    List<DataModel.NP081Model.EnumOperationMode> OperationModes = new List<DataModel.NP081Model.EnumOperationMode> { DataModel.NP081Model.EnumOperationMode.COOLING,
-    DataModel.NP081Model.EnumOperationMode.DEHUMIDIFICATION, DataModel.NP081Model.EnumOperationMode.HEATING, DataModel.NP081Model.EnumOperationMode.VENTILATION};
+    List<OperationMode> OperationModes = new List<OperationMode> { OperationMode.COOLING,
+    OperationMode.DEHUMIDIFICATION, OperationMode.HEATING, OperationMode.VENTILATION};
     List<string> OperationModeTexts = new List<string> { "冷房", "除湿", "暖房", "送風"};
 
     int operationSelectCount = 0;
-    DataModel.NP081Model.EnumOperationMode OperationModeSelection = DataModel.NP081Model.EnumOperationMode.COOLING;
+    OperationMode OperationModeSelection = OperationMode.COOLING;
 
-    List<DataModel.NP081Model.EnumTimerMode> TimerModes = new List<DataModel.NP081Model.EnumTimerMode> { DataModel.NP081Model.EnumTimerMode.NONE, DataModel.NP081Model.EnumTimerMode.OFFTIMER, DataModel.NP081Model.EnumTimerMode.ONTIMER};
-    DataModel.NP081Model.EnumTimerMode TimerModeSelection = DataModel.NP081Model.EnumTimerMode.NONE;
+    List<TimerMode> TimerModes = new List<TimerMode> { TimerMode.NONE, TimerMode.OFFTIMER, TimerMode.ONTIMER};
+    TimerMode TimerModeSelection = TimerMode.NONE;
 
-    DataModel.NP081Model model = new DataModel.NP081Model();
+    NP081Dto model = new NP081Dto();
     bool sendButtonDisabled = false;
 
     public void ButtonAdd()
@@ -94,10 +94,10 @@
         model.Power = pwr;
         model.TimerLength = timerValue;
         model.OperationMode = OperationModeSelection;
-        if (OperationModeSelection == DataModel.NP081Model.EnumOperationMode.HEATING)
+        if (OperationModeSelection == OperationMode.HEATING)
         {
             model.HeatingDegrees = degree;
-        }else if (OperationModeSelection == DataModel.NP081Model.EnumOperationMode.COOLING)
+        }else if (OperationModeSelection == OperationMode.COOLING)
         {
             model.CoolingDegrees = degree;
         }
@@ -122,7 +122,7 @@
     protected override async void OnInitialized()
     {
         base.OnInitialized();
-        model = await Http.GetFromJsonAsync<DataModel.NP081Model>("/acget") ?? new DataModel.NP081Model();
+        model = await Http.GetFromJsonAsync<NP081Dto>("/acget") ?? new NP081Dto();
         updateTimerValue();
     }
     protected override void OnAfterRender(bool firstRender)

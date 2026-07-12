@@ -15,6 +15,7 @@ string ConfigFileBaseFmt = "begin remote\nname aircond\nflags RAW_CODES\neps 30\
 string ConfigFileExt = "\nend raw_codes\nend remote";
 string ProgramDirectory = Directory.GetParent(Assembly.GetExecutingAssembly().Location).FullName;
 var configManager = new AircondConfigManager<NP081>("NP081");
+var circulatorConfigManager = new CirculatorConfigManager();
 var builder = WebApplication.CreateBuilder(args);
 using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole());
 var logger = factory.CreateLogger("Program");
@@ -26,6 +27,9 @@ var app = builder.Build();
 var automationConfig = new AutomationConfigManager();
 DateTime TimerStarted = DateTime.Now;
 
+// サーキュレーターの LIRC 設定(circulator.conf)を起動時に生成・配置しておく
+await IrSending.EnsureCirculatorConf(circulatorConfigManager.Config);
+
 Observable.Interval(TimeSpan.FromSeconds(10))
     .Select(u => configManager.controller ?? new NP081())
     .Where((c) => c.Power)
@@ -35,7 +39,7 @@ Observable.Interval(TimeSpan.FromSeconds(10))
     .Subscribe(async(c) =>
 {
     if (c.TimerMode == TimerMode.OFFTIMER)
-        c.Power = false; //�I�t�^�C�}�Ȃ�G�A�R���̓d�����Ɛ؂��
+        c.Power = false; //オフタイマならエアコンの電源ごと切れる
     c.TimerMode = TimerMode.NONE;
     if (automationConfig.Config.AircondPwrLink)
         await IrSending.sendCirculatorSignal("power");
@@ -89,6 +93,23 @@ app.MapPost("/apiac", async (NP081 data) =>
 app.MapPost("/simplecode", async (SimpleIRCode code) =>
 {
     await IrSending.sendCirculatorSignal(code.Id);
+    return Results.Ok("OK");
+});
+
+app.MapGet("/circulatorconfig", () => circulatorConfigManager.Config);
+
+app.MapPost("/circulatorconfig", async (CirculatorConfig cfg) =>
+{
+    circulatorConfigManager.Config = cfg;
+    circulatorConfigManager.Save();
+    await IrSending.EnsureCirculatorConf(cfg); // 即座に circulator.conf を再生成
+    return Results.Ok("OK");
+});
+
+app.MapPost("/circulatorconfig/reload", async () =>
+{
+    circulatorConfigManager.Reload(); // ディスク上で編集した JSON を反映
+    await IrSending.EnsureCirculatorConf(circulatorConfigManager.Config);
     return Results.Ok("OK");
 });
 

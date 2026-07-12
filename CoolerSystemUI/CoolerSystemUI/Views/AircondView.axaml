@@ -1,0 +1,96 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:CoolerSystemUI.ViewModels"
+             xmlns:shared="using:AEHAFmtSender.Shared.Models"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="430"
+             x:Class="CoolerSystemUI.Views.AircondView"
+             x:DataType="vm:AircondViewModel">
+
+    <Grid RowDefinitions="*,Auto" Margin="8">
+        <!-- 操作エリア: 左=電源/モード, 右=温度/タイマー -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,*" ColumnSpacing="16">
+
+            <!-- 左カラム -->
+            <StackPanel Grid.Column="0" Spacing="10">
+                <Grid ColumnDefinitions="Auto,*">
+                    <TextBlock Text="電源" FontSize="22" VerticalAlignment="Center" />
+                    <ToggleSwitch Grid.Column="1" HorizontalAlignment="Right"
+                                  IsChecked="{Binding Power}"
+                                  OnContent="ON" OffContent="OFF" />
+                </Grid>
+
+                <TextBlock Text="運転モード" FontSize="18" Foreground="#AAAAAA" />
+                <UniformGrid Columns="2" Rows="2">
+                    <ToggleButton Classes="segment" Margin="2" Content="冷房"
+                                  IsChecked="{Binding IsCooling, Mode=OneWay}"
+                                  Command="{Binding SetModeCommand}"
+                                  CommandParameter="{x:Static shared:OperationMode.COOLING}" />
+                    <ToggleButton Classes="segment" Margin="2" Content="暖房"
+                                  IsChecked="{Binding IsHeating, Mode=OneWay}"
+                                  Command="{Binding SetModeCommand}"
+                                  CommandParameter="{x:Static shared:OperationMode.HEATING}" />
+                    <ToggleButton Classes="segment" Margin="2" Content="除湿"
+                                  IsChecked="{Binding IsDehumidification, Mode=OneWay}"
+                                  Command="{Binding SetModeCommand}"
+                                  CommandParameter="{x:Static shared:OperationMode.DEHUMIDIFICATION}" />
+                    <ToggleButton Classes="segment" Margin="2" Content="送風"
+                                  IsChecked="{Binding IsVentilation, Mode=OneWay}"
+                                  Command="{Binding SetModeCommand}"
+                                  CommandParameter="{x:Static shared:OperationMode.VENTILATION}" />
+                </UniformGrid>
+            </StackPanel>
+
+            <!-- 右カラム -->
+            <StackPanel Grid.Column="1" Spacing="10">
+                <TextBlock Text="設定温度" FontSize="18" Foreground="#AAAAAA" />
+                <Grid ColumnDefinitions="Auto,*,Auto" IsEnabled="{Binding CanEditTemperature}">
+                    <Button Grid.Column="0" Classes="stepper" Content="−"
+                            Command="{Binding DecrementTemperatureCommand}" />
+                    <TextBlock Grid.Column="1" Text="{Binding TemperatureText}"
+                               FontSize="44" FontWeight="Bold"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <Button Grid.Column="2" Classes="stepper" Content="＋"
+                            Command="{Binding IncrementTemperatureCommand}" />
+                </Grid>
+
+                <TextBlock Text="タイマー" FontSize="18" Foreground="#AAAAAA" />
+                <UniformGrid Columns="3">
+                    <ToggleButton Classes="segment" Margin="2" Content="なし"
+                                  IsChecked="{Binding IsTimerNone, Mode=OneWay}"
+                                  Command="{Binding SetTimerModeCommand}"
+                                  CommandParameter="{x:Static shared:TimerMode.NONE}" />
+                    <ToggleButton Classes="segment" Margin="2" Content="切"
+                                  IsChecked="{Binding IsOffTimer, Mode=OneWay}"
+                                  Command="{Binding SetTimerModeCommand}"
+                                  CommandParameter="{x:Static shared:TimerMode.OFFTIMER}" />
+                    <ToggleButton Classes="segment" Margin="2" Content="入"
+                                  IsChecked="{Binding IsOnTimer, Mode=OneWay}"
+                                  Command="{Binding SetTimerModeCommand}"
+                                  CommandParameter="{x:Static shared:TimerMode.ONTIMER}" />
+                </UniformGrid>
+                <Grid ColumnDefinitions="Auto,*,Auto" IsEnabled="{Binding CanEditTimer}">
+                    <Button Grid.Column="0" Classes="stepper" Content="−"
+                            Command="{Binding DecrementTimerCommand}" />
+                    <TextBlock Grid.Column="1" Text="{Binding TimerText}"
+                               FontSize="26" FontWeight="Bold"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <Button Grid.Column="2" Classes="stepper" Content="＋"
+                            Command="{Binding IncrementTimerCommand}" />
+                </Grid>
+            </StackPanel>
+        </Grid>
+
+        <!-- フッター: 送信・再取得・状態表示 -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto" Margin="0,8,0,0" ColumnSpacing="8">
+            <TextBlock Grid.Column="0" Text="{Binding StatusMessage}"
+                       VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                       Foreground="#AAAAAA" />
+            <Button Grid.Column="1" Classes="touch" Content="再取得"
+                    Command="{Binding LoadCommand}" IsEnabled="{Binding !IsBusy}" />
+            <Button Grid.Column="2" Classes="touch" Content="送信" Width="140"
+                    Command="{Binding ApplyCommand}" IsEnabled="{Binding !IsBusy}" />
+        </Grid>
+    </Grid>
+</UserControl>

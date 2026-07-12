@@ -1,0 +1,9 @@
+# CoolerSystemUI: パネルのバックライトを非 root ユーザから制御できるようにする。
+# bl_power(画面 ON/OFF)と brightness を video グループへ書き込み許可する。
+# キオスク実行ユーザ 'cooler' は video グループに所属しているため、これで消灯制御が可能になる。
+#
+# 配置: /etc/udev/rules.d/99-backlight.rules
+# 反映: sudo udevadm control --reload-rules && sudo udevadm trigger --subsystem-match=backlight
+#       (または再起動)
+ACTION=="add", SUBSYSTEM=="backlight", RUN+="/bin/chgrp video /sys/class/backlight/%k/brightness /sys/class/backlight/%k/bl_power"
+ACTION=="add", SUBSYSTEM=="backlight", RUN+="/bin/chmod g+w /sys/class/backlight/%k/brightness /sys/class/backlight/%k/bl_power"

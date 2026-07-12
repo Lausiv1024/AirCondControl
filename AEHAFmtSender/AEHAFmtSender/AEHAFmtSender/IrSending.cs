@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
+using System.Text;
+using AEHAFmtSender.IRFormats.Nec;
 
 namespace AEHAFmtSender;
 
@@ -9,6 +11,7 @@ public class IrSending
     const string ConfigFileExt = "\nend raw_codes\nend remote";
     const string RPiLircDirPath = "/etc/lirc/lircd.conf.d";
     const string LircFileName = "aircond.conf";
+    const string CirculatorFileName = "circulator.conf";
     const int TICK = 425;
 
 /// <summary>
@@ -124,5 +127,82 @@ public class IrSending
         Console.WriteLine("SEND_ONCE circulator {0}", signal);
         var p = Process.Start(psi);
         await p.WaitForExitAsync();
+    }
+
+    /// <summary>
+    /// サーキュレーター設定から LIRC の circulator.conf(RAW_CODES) を生成して配置する。
+    /// 全コマンドを名前付き raw_code として 1 つの conf にまとめるため、以降の送信は
+    /// irsend SEND_ONCE {remote} {id} のみで済み、押下毎の lircd 再起動は不要。
+    /// 起動時と設定変更時に呼ぶ。内容が変化した場合のみ lircd を再起動する。
+    /// </summary>
+    public static async Task EnsureCirculatorConf(CirculatorConfig config)
+    {
+        string conf = BuildCirculatorConf(config);
+
+        if (!Environment.OSVersion.VersionString.Contains("Windows"))
+        {
+            var path = Path.Combine(RPiLircDirPath, CirculatorFileName);
+            string? existing = File.Exists(path) ? File.ReadAllText(path) : null;
+            if (existing == conf)
+                return; // 変化なし。lircd 再起動をスキップ
+
+            using (var sw = new StreamWriter(path))
+                sw.Write(conf);
+            await Task.Delay(20);
+            var psi = new ProcessStartInfo()
+            {
+                FileName = "systemctl",
+                UseShellExecute = true,
+                Arguments = "restart lircd"
+            };
+            await Process.Start(psi).WaitForExitAsync();
+        }
+        else
+        {
+            Debug.WriteLine(conf);
+            Console.WriteLine(conf); // Windows ではデバッグ出力のみ
+        }
+    }
+
+    /// <summary>
+    /// CirculatorConfig の各コマンドを NEC 変調し、LIRC RAW_CODES 形式の conf 文字列を組み立てる。
+    /// </summary>
+    private static string BuildCirculatorConf(CirculatorConfig config)
+    {
+        var t = config.Timing;
+        var sb = new StringBuilder();
+        sb.Append("begin remote\n");
+        sb.Append($"  name {config.RemoteName}\n");
+        sb.Append("  flags RAW_CODES\n");
+        sb.Append("  eps 30\n");
+        sb.Append("  aeps 100\n");
+        sb.Append($"  gap {t.GapMicros}\n");
+        sb.Append("  toggle_bit_mask 0x0\n\n");
+        sb.Append("  begin raw_codes\n");
+        foreach (var kv in config.Commands)
+        {
+            byte[] data = ParseHex(kv.Value);
+            var pulses = NecEncoder.Encode(data, t);
+            sb.Append($"    name {kv.Key}\n");
+            // 可読性のため 16 値ごとに改行（LIRC は空白区切りであれば折り返し可）
+            for (int i = 0; i < pulses.Count; i++)
+            {
+                sb.Append(i % 16 == 0 ? "      " : " ");
+                sb.Append(pulses[i]);
+                if (i % 16 == 15 || i == pulses.Count - 1)
+                    sb.Append('\n');
+            }
+        }
+        sb.Append("  end raw_codes\n");
+        sb.Append("end remote\n");
+        return sb.ToString();
+    }
+
+    /// <summary>"32 00 EF 05 FA" のような 16 進文字列（空白/カンマ/タブ区切り）をバイト配列へ変換する。</summary>
+    private static byte[] ParseHex(string hex)
+    {
+        return hex.Split(new[] { ' ', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries)
+                  .Select(x => Convert.ToByte(x, 16))
+                  .ToArray();
     }
 }

@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
 namespace AEHAFmtSender.IRFormats
 {
@@ -79,7 +79,7 @@ namespace AEHAFmtSender.IRFormats
                 _timerMode == TimerMode.OFFTIMER ? (byte)(_timerLength / 10) : (byte)0x00, //エアコン上では10分単位で変えるのでそれに合わせる。
                 _timerMode == TimerMode.ONTIMER ? (byte)(_timerLength / 10) : (byte)0x00,
                 (byte) _timerMode,
-                0x10,
+                0x14,
                 0x00,
                 0x00,
                 0x00,

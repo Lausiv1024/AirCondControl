@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="CoolerSystemUI/CoolerSystemUI.csproj" />
+  <Project Path="../AEHAFmtSender/AEHAFmtSender.Shared/AEHAFmtSender.Shared.csproj" />
+</Solution>

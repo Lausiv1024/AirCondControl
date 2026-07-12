@@ -1,0 +1,38 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="CoolerSystemUI.App"
+             RequestedThemeVariant="Dark">
+             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+
+    <Application.Styles>
+        <FluentTheme />
+
+        <!-- タッチ操作向けの共通スタイル (大きめのヒット領域・フォント) -->
+        <Style Selector="Button.touch">
+            <Setter Property="MinHeight" Value="56" />
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="Padding" Value="16,8" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+        <!-- 丸い大型の +/- ボタン -->
+        <Style Selector="Button.stepper">
+            <Setter Property="Width" Value="72" />
+            <Setter Property="Height" Value="72" />
+            <Setter Property="FontSize" Value="32" />
+            <Setter Property="CornerRadius" Value="36" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+        <!-- 選択中を表すトグルボタン -->
+        <Style Selector="ToggleButton.segment">
+            <Setter Property="MinHeight" Value="56" />
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+    </Application.Styles>
+</Application>

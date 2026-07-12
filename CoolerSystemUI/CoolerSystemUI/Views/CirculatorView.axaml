@@ -1,0 +1,34 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:CoolerSystemUI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="430"
+             x:Class="CoolerSystemUI.Views.CirculatorView"
+             x:DataType="vm:CirculatorViewModel">
+
+    <Grid RowDefinitions="*,Auto" Margin="16">
+        <StackPanel Grid.Row="0" Spacing="16" VerticalAlignment="Center">
+            <TextBlock Text="サーキュレーター" FontSize="22" HorizontalAlignment="Center" />
+            <TextBlock Text="本体を見ながら操作してください" FontSize="14"
+                       Foreground="#AAAAAA" HorizontalAlignment="Center" />
+            <UniformGrid Columns="3" IsEnabled="{Binding !IsBusy}">
+                <Button Classes="touch" Margin="8" Height="90" FontSize="22"
+                        Content="電源" Command="{Binding PowerCommand}" />
+                <Button Classes="touch" Margin="8" Height="90" FontSize="22"
+                        Content="タイマー" Command="{Binding TimerCommand}" />
+                <Button Classes="touch" Margin="8" Height="90" FontSize="22"
+                        Content="首振り" Command="{Binding SwingCommand}" />
+                <Button Classes="touch" Margin="8" Height="90" FontSize="22"
+                        Content="モード" Command="{Binding ModeCommand}" />
+                <Button Classes="touch" Margin="8" Height="90" FontSize="22"
+                        Content="風量 ＋" Command="{Binding SpeedUpCommand}" />
+                <Button Classes="touch" Margin="8" Height="90" FontSize="22"
+                        Content="風量 −" Command="{Binding SpeedDownCommand}" />
+            </UniformGrid>
+        </StackPanel>
+
+        <TextBlock Grid.Row="1" Text="{Binding StatusMessage}" Margin="0,8,0,0"
+                   Foreground="#AAAAAA" HorizontalAlignment="Center" />
+    </Grid>
+</UserControl>

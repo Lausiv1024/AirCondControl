@@ -1,0 +1,45 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:CoolerSystemUI.ViewModels"
+             xmlns:views="using:CoolerSystemUI.Views"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="480"
+             x:Class="CoolerSystemUI.Views.MainView"
+             x:DataType="vm:MainViewModel"
+             FontSize="16">
+    <UserControl.Styles>
+        <Style Selector="TabItem">
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="MinHeight" Value="52" />
+            <Setter Property="Padding" Value="20,8" />
+        </Style>
+    </UserControl.Styles>
+
+    <!-- 1 セル Grid: TabControl を全面に敷き、消灯ボタンを右上に浮かせ、最前面に黒オーバーレイを置く -->
+    <Grid>
+        <TabControl SelectedIndex="{Binding SelectedTabIndex}" Padding="8">
+            <TabItem Header="エアコン">
+                <views:AircondView DataContext="{Binding Aircond}" />
+            </TabItem>
+            <TabItem Header="サーキュレーター">
+                <views:CirculatorView DataContext="{Binding Circulator}" />
+            </TabItem>
+            <TabItem Header="設定">
+                <views:AutomationView DataContext="{Binding Automation}" />
+            </TabItem>
+        </TabControl>
+
+        <!-- 手動消灯ボタン: タブヘッダ右側の空きスペースに配置 -->
+        <Button Content="画面OFF"
+                Command="{Binding Screen.SleepCommand}"
+                HorizontalAlignment="Right" VerticalAlignment="Top"
+                Margin="0,6,8,0" Padding="16,8" FontSize="18" MinHeight="44" />
+
+        <!-- 消灯中の黒オーバーレイ: 全面を覆い、任意のタップで点灯する(背後 UI には伝播させない) -->
+        <Border x:Name="ScreenOverlay"
+                Background="Black"
+                IsVisible="{Binding Screen.IsScreenOff}"
+                PointerPressed="OnOverlayPressed" />
+    </Grid>
+</UserControl>
