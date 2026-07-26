@@ -4,13 +4,15 @@
     options: readonly { value: T; label: string }[];
     value: T;
     disabled?: boolean;
+    /** 選択肢が多い・幅が狭い場所 (グラフの表示範囲切り替えなど) 向けの小さい見た目。 */
+    compact?: boolean;
     onselect: (value: T) => void;
   }
 
-  let { options, value, disabled = false, onselect }: Props = $props();
+  let { options, value, disabled = false, compact = false, onselect }: Props = $props();
 </script>
 
-<div class="segmented" role="group">
+<div class="segmented" class:compact role="group">
   {#each options as option (option.value)}
     <button
       type="button"
@@ -38,5 +40,14 @@
     padding: 0.8rem 0.3rem;
     font-size: 0.95rem;
     white-space: nowrap;
+  }
+
+  .segmented.compact {
+    gap: 0.3rem;
+  }
+
+  .segmented.compact button {
+    padding: 0.4rem 0.15rem;
+    font-size: 0.78rem;
   }
 </style>

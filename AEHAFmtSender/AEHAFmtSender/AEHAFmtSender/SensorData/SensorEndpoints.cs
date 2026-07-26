@@ -38,11 +38,12 @@ namespace AEHAFmtSender.SensorData
                 return Results.Ok(ToDto(reading));
             });
 
-            app.MapGet("/sensordata/history", async (SensorDbContext db, int hours = 24, int limit = 500) =>
+            // 表示範囲は 30 分から選べるので、単位は時間ではなく分。
+            app.MapGet("/sensordata/history", async (SensorDbContext db, int minutes = 1440, int limit = 500) =>
             {
-                hours = Math.Clamp(hours, 1, 24 * 31);
+                minutes = Math.Clamp(minutes, 1, 60 * 24 * 31);
                 limit = Math.Clamp(limit, 2, 5000);
-                var since = DateTime.UtcNow.AddHours(-hours);
+                var since = DateTime.UtcNow.AddMinutes(-minutes);
 
                 // 必ず新しい側から取る。昇順のまま Take すると期間内の「古い方 limit 件」しか
                 // 返らず、60秒間隔の計測では 8 時間ほどでグラフが打ち切られてしまう。

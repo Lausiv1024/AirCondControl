@@ -70,6 +70,6 @@ export const api = {
   setAutomation: (config: AutomationConfig) => postJson('automationconfig', config),
 
   getLatestSensor: () => request<SensorReading>('sensordata/latest'),
-  getSensorHistory: (hours = 24, limit = 500) =>
-    request<SensorReading[]>(`sensordata/history?hours=${hours}&limit=${limit}`),
+  getSensorHistory: (minutes = 1440, limit = 500) =>
+    request<SensorReading[]>(`sensordata/history?minutes=${minutes}&limit=${limit}`),
 };

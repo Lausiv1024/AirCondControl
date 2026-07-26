@@ -3,9 +3,18 @@
   import { slide } from 'svelte/transition';
   import { api, ApiError } from '../api';
   import type { SensorReading } from '../types';
+  import Segmented from './Segmented.svelte';
 
   const POLL_MS = 30_000;
-  const HISTORY_HOURS = 24;
+
+  /** グラフの表示範囲 (分)。値を Segmented にそのまま渡すので number 型を明示する。 */
+  const RANGES: readonly { value: number; label: string }[] = [
+    { value: 30, label: '30分' },
+    { value: 60, label: '1時間' },
+    { value: 360, label: '6時間' },
+    { value: 720, label: '12時間' },
+    { value: 1440, label: '24時間' },
+  ];
 
   let latest = $state<SensorReading | undefined>(undefined);
   let history = $state<SensorReading[]>([]);
@@ -13,23 +22,40 @@
   let connected = $state(false);
   let expandedKey = $state<string | null>(null);
   let tooltip = $state<{ visible: boolean; idx: number } | null>(null);
+  let rangeMinutes = $state(1440);
+  let loading = $state(false);
 
   let pollTimer: ReturnType<typeof setInterval> | undefined;
+  /** 表示範囲を切り替えた直後は、前の範囲の応答が遅れて届くことがあるので捨てる。 */
+  let loadSeq = 0;
 
   async function load(): Promise<void> {
+    const seq = ++loadSeq;
+    loading = true;
     try {
       const [nextLatest, nextHistory] = await Promise.all([
         api.getLatestSensor(),
-        api.getSensorHistory(HISTORY_HOURS),
+        api.getSensorHistory(rangeMinutes),
       ]);
+      if (seq !== loadSeq) return;
       latest = nextLatest;
       history = nextHistory ?? [];
       connected = true;
       status = latest ? '' : 'まだセンサーデータがありません';
     } catch (e) {
+      if (seq !== loadSeq) return;
       connected = false;
       status = e instanceof ApiError ? e.message : '不明なエラー';
+    } finally {
+      if (seq === loadSeq) loading = false;
     }
+  }
+
+  function selectRange(minutes: number): void {
+    if (minutes === rangeMinutes) return;
+    rangeMinutes = minutes;
+    tooltip = null;
+    void load();
   }
 
   onMount(() => {
@@ -296,11 +322,15 @@
       class:expanded={isExpanded}
       role="button"
       tabindex="0"
-      onclick={() => {
+      onclick={(e) => {
+        // 詳細エリア内 (表示範囲の切り替え・グラフ) のクリックでは畳まない。
+        if ((e.target as Element).closest('.detail')) return;
         expandedKey = isExpanded ? null : m.key;
         tooltip = null;
       }}
       onkeydown={(e) => {
+        // 範囲切り替えボタン上での Enter / Space はボタン側の操作。畳まない。
+        if ((e.target as Element).closest('.detail')) return;
         if (e.key === 'Enter' || e.key === ' ') {
           expandedKey = isExpanded ? null : m.key;
           tooltip = null;
@@ -328,6 +358,11 @@
 
       {#if isExpanded}
         <div class="detail" transition:slide={{ duration: 250 }}>
+          <!-- データ不足でグラフが出せないときも範囲を変えられるよう、条件の外に置く。 -->
+          <div class="range" class:busy={loading}>
+            <Segmented options={RANGES} value={rangeMinutes} compact onselect={selectRange} />
+          </div>
+
           {#if m.values.length >= 2}
             {@const chart = buildDetailChart(m.values, m.timestamps, m.decimals)}
             <div class="stats">
@@ -541,6 +576,16 @@
   .detail {
     margin-top: 0.9rem;
     overflow: hidden;
+  }
+
+  .range {
+    margin-bottom: 0.75rem;
+    transition: opacity 0.15s ease;
+  }
+
+  /* 読み込み中は薄くして、古い範囲のグラフが残っていることを示す。 */
+  .range.busy {
+    opacity: 0.55;
   }
 
   .stats {
