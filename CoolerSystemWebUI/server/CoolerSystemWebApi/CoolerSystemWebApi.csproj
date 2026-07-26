@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>CoolerSystemWebApi</RootNamespace>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- wwwroot は web/ (Svelte) のビルド成果物。ソース管理外。 -->
+    <Content Remove="wwwroot\**" />
+    <Content Include="wwwroot\**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <Target Name="BuildSvelteApp" BeforeTargets="Build">
+    <Exec Command="npm run build" WorkingDirectory="$(MSBuildThisFileDirectory)..\..\web" />
+  </Target>
+
+</Project>

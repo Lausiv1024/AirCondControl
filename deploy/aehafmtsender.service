@@ -8,7 +8,8 @@ Type=simple
 WorkingDirectory=/opt/aehafmtsender
 ExecStart=/opt/aehafmtsender/AEHAFmtSender
 Environment=ASPNETCORE_ENVIRONMENT=Production
-Environment=ASPNETCORE_URLS=http://127.0.0.1:5195
+Environment=ASPNETCORE_URLS=http://0.0.0.0:5195
+# 0.0.0.0 バインドはESP32(SensorNode)からLAN経由で /sensordata へPOSTするために必要
 # /etc/lirc への書き込み・`systemctl restart lircd`・`irsend` の実行に root 権限が必要
 User=root
 Restart=on-failure

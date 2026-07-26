@@ -1,0 +1,12 @@
+## .NET
+bin/
+obj/
+*.user
+
+## Svelte / Vite
+node_modules/
+web/dist/
+.vite/
+
+## Svelte のビルド成果物 (web/ から生成される)
+server/CoolerSystemWebApi/wwwroot/

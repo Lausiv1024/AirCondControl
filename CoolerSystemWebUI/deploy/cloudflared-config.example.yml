@@ -1,0 +1,16 @@
+# Cloudflare Tunnel の設定例 (/etc/cloudflared/config.yml)。
+# 認証は Cloudflare Access (Zero Trust) 側で aircond.example.com に対してポリシーを張る。
+# アプリ側には認証コードを一切置かない。
+
+tunnel: <TUNNEL-UUID>
+credentials-file: /etc/cloudflared/<TUNNEL-UUID>.json
+
+ingress:
+  - hostname: aircond.example.com
+    service: http://127.0.0.1:5080
+  - service: http_status:404
+
+# Cloudflare Access 側の設定メモ:
+#  - Application: Self-hosted, ドメイン = aircond.example.com
+#  - Policy: 許可するメールアドレス / IdP グループを指定
+#  - /healthz を監視で使う場合も Access の内側に置く (Service Token を使うなら bypass ポリシーを別途)

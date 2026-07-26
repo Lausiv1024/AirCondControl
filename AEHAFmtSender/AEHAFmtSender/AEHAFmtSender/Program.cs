@@ -8,6 +8,8 @@ using AEHAFmtSender;
 using R3;
 using AEHAFmtSender.Shared;
 using AEHAFmtSender.Automation;
+using AEHAFmtSender.SensorData;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 const int TICK = 425;
 string RPiLircPath = "/etc/lirc/lircd.conf.d";
@@ -23,9 +25,17 @@ var logger = factory.CreateLogger("Program");
 builder.Services.AddHttpClient().AddRazorComponents()
     .AddInteractiveWebAssemblyComponents();
 
+string SensorDbPath = Path.Combine(ProgramDirectory, "sensordata.db");
+builder.Services.AddDbContext<SensorDbContext>(options => options.UseSqlite($"Data Source={SensorDbPath}"));
+
 var app = builder.Build();
 var automationConfig = new AutomationConfigManager();
 DateTime TimerStarted = DateTime.Now;
+
+using (var scope = app.Services.CreateScope())
+{
+    scope.ServiceProvider.GetRequiredService<SensorDbContext>().Database.EnsureCreated();
+}
 
 // サーキュレーターの LIRC 設定(circulator.conf)を起動時に生成・配置しておく
 await IrSending.EnsureCirculatorConf(circulatorConfigManager.Config);
@@ -126,6 +136,8 @@ app.MapPost("/automationconfig", (AutomationConfig cfg) =>
     logger.LogInformation("Automation Config Updated");
     automationConfig.Save();
 });
+
+app.MapSensorEndpoints();
 
 app.MapRazorComponents<App>()
     .AddInteractiveWebAssemblyRenderMode()

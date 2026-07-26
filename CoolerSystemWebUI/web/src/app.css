@@ -1,0 +1,87 @@
+:root {
+  --bg: #0f1720;
+  --surface: #1a2430;
+  --surface-2: #22303f;
+  --line: #2f3f52;
+  --text: #e8eef5;
+  --muted: #93a4b8;
+  --accent: #3ba7ff;
+  --accent-weak: #1d4a6d;
+  --cool: #3ba7ff;
+  --heat: #ff7a59;
+  --ok: #4ade80;
+  --err: #f87171;
+  --radius: 14px;
+
+  color-scheme: dark;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    'Hiragino Kaku Gothic ProN',
+    'Noto Sans JP',
+    sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  /* iOS でボタン連打時に拡大されないように */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    transform 0.06s ease;
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+button.selected {
+  background: var(--accent-weak);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* キーボード操作時のみフォーカスリングを出す (タップでは出さない) */
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
+.card > h2 {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
