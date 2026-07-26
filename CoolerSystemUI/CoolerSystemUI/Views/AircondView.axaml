@@ -44,16 +44,38 @@
 
             <!-- 右カラム -->
             <StackPanel Grid.Column="1" Spacing="10">
-                <TextBlock Text="設定温度" FontSize="18" Foreground="#AAAAAA" />
-                <Grid ColumnDefinitions="Auto,*,Auto" IsEnabled="{Binding CanEditTemperature}">
-                    <Button Grid.Column="0" Classes="stepper" Content="−"
-                            Command="{Binding DecrementTemperatureCommand}" />
-                    <TextBlock Grid.Column="1" Text="{Binding TemperatureText}"
-                               FontSize="44" FontWeight="Bold"
-                               HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    <Button Grid.Column="2" Classes="stepper" Content="＋"
-                            Command="{Binding IncrementTemperatureCommand}" />
-                </Grid>
+                <!-- 冷房・暖房・送風時: 設定温度 -->
+                <StackPanel Spacing="10" IsVisible="{Binding ShowTemperature}">
+                    <TextBlock Text="設定温度" FontSize="18" Foreground="#AAAAAA" />
+                    <Grid ColumnDefinitions="Auto,*,Auto" IsEnabled="{Binding CanEditTemperature}">
+                        <Button Grid.Column="0" Classes="stepper" Content="−"
+                                Command="{Binding DecrementTemperatureCommand}" />
+                        <TextBlock Grid.Column="1" Text="{Binding TemperatureText}"
+                                   FontSize="44" FontWeight="Bold"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <Button Grid.Column="2" Classes="stepper" Content="＋"
+                                Command="{Binding IncrementTemperatureCommand}" />
+                    </Grid>
+                </StackPanel>
+
+                <!-- 除湿時: 設定温度の代わりに除湿強度 -->
+                <StackPanel Spacing="10" IsVisible="{Binding IsDehumidification}">
+                    <TextBlock Text="除湿強度" FontSize="18" Foreground="#AAAAAA" />
+                    <UniformGrid Columns="3">
+                        <ToggleButton Classes="segment" Margin="2" Content="強"
+                                      IsChecked="{Binding IsDehumidStrong, Mode=OneWay}"
+                                      Command="{Binding SetDehumidificationCommand}"
+                                      CommandParameter="{x:Static shared:DehumidificationAdjustments.STRONG}" />
+                        <ToggleButton Classes="segment" Margin="2" Content="標準"
+                                      IsChecked="{Binding IsDehumidNormal, Mode=OneWay}"
+                                      Command="{Binding SetDehumidificationCommand}"
+                                      CommandParameter="{x:Static shared:DehumidificationAdjustments.NORMAL}" />
+                        <ToggleButton Classes="segment" Margin="2" Content="弱"
+                                      IsChecked="{Binding IsDehumidWeak, Mode=OneWay}"
+                                      Command="{Binding SetDehumidificationCommand}"
+                                      CommandParameter="{x:Static shared:DehumidificationAdjustments.WEAK}" />
+                    </UniformGrid>
+                </StackPanel>
 
                 <TextBlock Text="タイマー" FontSize="18" Foreground="#AAAAAA" />
                 <UniformGrid Columns="3">

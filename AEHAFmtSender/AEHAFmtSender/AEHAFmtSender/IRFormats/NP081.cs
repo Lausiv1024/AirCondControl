@@ -14,6 +14,18 @@ namespace AEHAFmtSender.IRFormats
         const int PARITY_DATA0 = 0x26;
         const int MAX_DEGREE = 31;
         const int MIN_DEGREE = 16;
+        /// <summary>
+        /// 風左右 (byte8 上位4bit)。現状は左(0x2)固定。
+        /// </summary>
+        const int WIND_HORIZONTAL = 0x2;
+        /// <summary>
+        /// 冷房時の byte8 下位4bit 固定値
+        /// </summary>
+        const int DEHUMID_COOLING = 0x6;
+        /// <summary>
+        /// 暖房・送風時の byte8 下位4bit 固定値
+        /// </summary>
+        const int DEHUMID_OTHER = 0x0;
         private bool _power;
         /// <summary>
         /// エアコンの電源ステータス
@@ -60,6 +72,25 @@ namespace AEHAFmtSender.IRFormats
         /// タイマー時間 (単位：分)
         /// </summary>
         public int TimerLength { get { return _timerLength; } set { _timerLength = value; } }
+        private DehumidificationAdjustments _dehumidification = DehumidificationAdjustments.NORMAL;
+        /// <summary>
+        /// 除湿強度。除湿運転時のみ信号に反映される。
+        /// </summary>
+        public DehumidificationAdjustments Dehumidification { get { return _dehumidification; } set { _dehumidification = value; } }
+
+        /// <summary>
+        /// byte8 (上位4bit 風左右 / 下位4bit 除湿強度) を組み立てる。
+        /// </summary>
+        private byte GetWindAndDehumidification()
+        {
+            int lower = _mode switch
+            {
+                OperationMode.DEHUMIDIFICATION => (int)_dehumidification,
+                OperationMode.COOLING => DEHUMID_COOLING,
+                _ => DEHUMID_OTHER
+            };
+            return (byte)((WIND_HORIZONTAL << 4) | lower);
+        }
 
         public override byte[] GetCurrentSignal()
         {
@@ -73,7 +104,7 @@ namespace AEHAFmtSender.IRFormats
                 (byte)(_power ? 0x20 : 0x0),
                 (byte) _mode,
                 (byte) (Degrees - 16),
-                0x26,
+                GetWindAndDehumidification(),
                 0x40,
                 0x00,
                 _timerMode == TimerMode.OFFTIMER ? (byte)(_timerLength / 10) : (byte)0x00, //エアコン上では10分単位で変えるのでそれに合わせる。
@@ -118,11 +149,14 @@ namespace AEHAFmtSender.IRFormats
         OFFTIMER = 0x03,
         ONTIMER = 0x05
     }
+    /// <summary>
+    /// 除湿強度 (byte8 下位4bit)
+    /// </summary>
     public enum DehumidificationAdjustments
     {
-        NORMAL,
-        WEAK,
-        STRONG
+        STRONG = 0x0,
+        NORMAL = 0x2,
+        WEAK = 0x4
     }
 }
 

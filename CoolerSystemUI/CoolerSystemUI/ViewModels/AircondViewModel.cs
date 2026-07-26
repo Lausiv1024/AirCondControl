@@ -33,6 +33,7 @@ namespace CoolerSystemUI.ViewModels
         {
             nameof(Power), nameof(CoolingDegrees), nameof(HeatingDegrees),
             nameof(OperationMode), nameof(TimerMode), nameof(TimerLength),
+            nameof(Dehumidification),
         };
 
         private readonly DispatcherTimer _debounce;   // 無操作後の自動送信用
@@ -77,9 +78,16 @@ namespace CoolerSystemUI.ViewModels
         [NotifyPropertyChangedFor(nameof(IsHeating))]
         [NotifyPropertyChangedFor(nameof(IsVentilation))]
         [NotifyPropertyChangedFor(nameof(CanEditTemperature))]
+        [NotifyPropertyChangedFor(nameof(ShowTemperature))]
         [NotifyPropertyChangedFor(nameof(DisplayDegree))]
         [NotifyPropertyChangedFor(nameof(TemperatureText))]
         private OperationMode operationMode = OperationMode.COOLING;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsDehumidStrong))]
+        [NotifyPropertyChangedFor(nameof(IsDehumidNormal))]
+        [NotifyPropertyChangedFor(nameof(IsDehumidWeak))]
+        private DehumidificationAdjustments dehumidification = DehumidificationAdjustments.NORMAL;
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(IsTimerNone))]
@@ -113,8 +121,16 @@ namespace CoolerSystemUI.ViewModels
         public bool IsOffTimer => TimerMode == TimerMode.OFFTIMER;
         public bool IsOnTimer => TimerMode == TimerMode.ONTIMER;
 
+        // --- 除湿強度の選択状態 ---
+        public bool IsDehumidStrong => Dehumidification == DehumidificationAdjustments.STRONG;
+        public bool IsDehumidNormal => Dehumidification == DehumidificationAdjustments.NORMAL;
+        public bool IsDehumidWeak => Dehumidification == DehumidificationAdjustments.WEAK;
+
         /// <summary>温度設定が可能なモード (冷房・暖房) か。</summary>
         public bool CanEditTemperature => OperationMode is OperationMode.COOLING or OperationMode.HEATING;
+
+        /// <summary>設定温度エリアを表示するか。除湿時は代わりに除湿強度エリアを出す。</summary>
+        public bool ShowTemperature => OperationMode != OperationMode.DEHUMIDIFICATION;
 
         /// <summary>現在のモードでの設定温度。</summary>
         public int DisplayDegree => OperationMode == OperationMode.HEATING ? HeatingDegrees : CoolingDegrees;
@@ -189,6 +205,9 @@ namespace CoolerSystemUI.ViewModels
 
         [RelayCommand]
         private void SetTimerMode(TimerMode mode) => TimerMode = mode;
+
+        [RelayCommand]
+        private void SetDehumidification(DehumidificationAdjustments level) => Dehumidification = level;
 
         [RelayCommand]
         private void IncrementTemperature()
@@ -295,6 +314,7 @@ namespace CoolerSystemUI.ViewModels
                 OperationMode = s.OperationMode;
                 TimerMode = s.TimerMode;
                 TimerLength = ClampTimer(s.TimerLength);
+                Dehumidification = NormalizeDehumid(s.Dehumidification);
             }
             finally
             {
@@ -309,7 +329,8 @@ namespace CoolerSystemUI.ViewModels
                && Clamp(s.HeatingDegrees, MinDegree, MaxDegree, 20) == HeatingDegrees
                && s.OperationMode == OperationMode
                && s.TimerMode == TimerMode
-               && ClampTimer(s.TimerLength) == TimerLength;
+               && ClampTimer(s.TimerLength) == TimerLength
+               && NormalizeDehumid(s.Dehumidification) == Dehumidification;
 
         private NP081Dto BuildDto() => new()
         {
@@ -320,7 +341,16 @@ namespace CoolerSystemUI.ViewModels
             OperationMode = OperationMode,
             TimerMode = TimerMode,
             TimerLength = TimerLength,
+            Dehumidification = Dehumidification,
         };
+
+        /// <summary>定義外の値 (古い設定ファイル等) が来たら標準に丸める。</summary>
+        private static DehumidificationAdjustments NormalizeDehumid(DehumidificationAdjustments value)
+            => value is DehumidificationAdjustments.STRONG
+                     or DehumidificationAdjustments.NORMAL
+                     or DehumidificationAdjustments.WEAK
+                ? value
+                : DehumidificationAdjustments.NORMAL;
 
         private static int Clamp(int value, int min, int max, int fallback)
         {

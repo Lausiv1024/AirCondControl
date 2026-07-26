@@ -23,6 +23,11 @@ namespace AEHAFmtSender.Shared.Models
         public TimerMode TimerMode { get; set; } = TimerMode.NONE;
 
         /// <summary>
+        /// 除湿強度。除湿運転時のみ信号 (byte8 下位4bit) に反映される。
+        /// </summary>
+        public DehumidificationAdjustments Dehumidification { get; set; } = DehumidificationAdjustments.NORMAL;
+
+        /// <summary>
         /// タイマー時間（単位：分）。
         /// </summary>
         public int TimerLength { get; set; } = 0;
@@ -43,5 +48,15 @@ namespace AEHAFmtSender.Shared.Models
         NONE = 0x00,
         OFFTIMER = 0x03,
         ONTIMER = 0x05
+    }
+
+    /// <summary>
+    /// 除湿強度 (信号 byte8 下位4bit)。数値はサーバ側 <c>AEHAFmtSender.IRFormats.DehumidificationAdjustments</c> と一致させること。
+    /// </summary>
+    public enum DehumidificationAdjustments
+    {
+        STRONG = 0x0,
+        NORMAL = 0x2,
+        WEAK = 0x4
     }
 }

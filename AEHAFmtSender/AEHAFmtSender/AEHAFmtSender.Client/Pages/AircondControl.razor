@@ -23,16 +23,33 @@
     </div>
     <div class="controlContainer">
         <select class="form-select" aria-label="OperationMode Select" @bind="OperationModeSelection">
-            @foreach(var t in OperationModes)
+            @for (int i = 0; i < OperationModes.Count; i++)
             {
-                <option value="@t">@t</option>
+                var t = OperationModes[i];
+                <option value="@t">@OperationModeTexts[i]</option>
             }
         </select>
     </div>
-    <div class="controlContainer">
-        <label>設定室温</label>
-        <input type="number" id="degrees" name="deg" min="16" max="31" @bind="degree"/>
-    </div>
+    @if (OperationModeSelection == OperationMode.DEHUMIDIFICATION)
+    {
+        <div class="controlContainer">
+            <label for="dehumid">除湿強度</label>
+            <select class="form-select" id="dehumid" aria-label="Dehumidification Select" @bind="DehumidificationSelection">
+                @for (int i = 0; i < Dehumidifications.Count; i++)
+                {
+                    var d = Dehumidifications[i];
+                    <option value="@d">@DehumidificationTexts[i]</option>
+                }
+            </select>
+        </div>
+    }
+    else
+    {
+        <div class="controlContainer">
+            <label>設定室温</label>
+            <input type="number" id="degrees" name="deg" min="16" max="31" @bind="degree"/>
+        </div>
+    }
     <h4>タイマー設定</h4>
     <div class="controlContainer">
         <select class="form-select" aria-label="Timer Select" @bind="TimerModeSelection">
@@ -71,6 +88,11 @@
     List<TimerMode> TimerModes = new List<TimerMode> { TimerMode.NONE, TimerMode.OFFTIMER, TimerMode.ONTIMER};
     TimerMode TimerModeSelection = TimerMode.NONE;
 
+    List<DehumidificationAdjustments> Dehumidifications = new List<DehumidificationAdjustments> {
+    DehumidificationAdjustments.STRONG, DehumidificationAdjustments.NORMAL, DehumidificationAdjustments.WEAK};
+    List<string> DehumidificationTexts = new List<string> { "強", "標準", "弱" };
+    DehumidificationAdjustments DehumidificationSelection = DehumidificationAdjustments.NORMAL;
+
     NP081Dto model = new NP081Dto();
     bool sendButtonDisabled = false;
 
@@ -104,6 +126,7 @@
         model.Degree = degree;
         model.TimerMode = TimerModeSelection;
         model.TimerLength = timerValue;
+        model.Dehumidification = DehumidificationSelection;
         sendButtonDisabled = true;
         await Http.PostAsJsonAsync("apiac", model);
         sendButtonDisabled = false;
@@ -119,11 +142,23 @@
         timerDisplayValue = $"{timerValue / 60}:{timerValue % 60}";
     }
 
-    protected override async void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
         model = await Http.GetFromJsonAsync<NP081Dto>("/acget") ?? new NP081Dto();
+        applyModelToInputs();
         updateTimerValue();
+    }
+
+    /// <summary>サーバから取得した状態を入力欄に反映する。反映しないと Apply 時に既定値で上書きしてしまう。</summary>
+    private void applyModelToInputs()
+    {
+        pwr = model.Power;
+        OperationModeSelection = model.OperationMode;
+        degree = model.OperationMode == OperationMode.HEATING ? model.HeatingDegrees : model.CoolingDegrees;
+        TimerModeSelection = model.TimerMode;
+        if (model.TimerLength >= MIN_TIMER && model.TimerLength <= MAX_TIMER)
+            timerValue = model.TimerLength;
+        DehumidificationSelection = model.Dehumidification;
     }
     protected override void OnAfterRender(bool firstRender)
     {
