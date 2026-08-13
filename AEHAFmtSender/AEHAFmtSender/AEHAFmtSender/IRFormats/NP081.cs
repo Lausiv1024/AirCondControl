@@ -105,7 +105,7 @@ namespace AEHAFmtSender.IRFormats
                 (byte) _mode,
                 (byte) (Degrees - 16),
                 GetWindAndDehumidification(),
-                0x40,
+                0x00, //信号受信時のエアコンの応答の種類を決めるフラグ。0x40で1回(ピッ)、0x80で2回(ピピッ)。
                 0x00,
                 _timerMode == TimerMode.OFFTIMER ? (byte)(_timerLength / 10) : (byte)0x00, //エアコン上では10分単位で変えるのでそれに合わせる。
                 _timerMode == TimerMode.ONTIMER ? (byte)(_timerLength / 10) : (byte)0x00,
