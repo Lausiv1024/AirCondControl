@@ -28,9 +28,13 @@ builder.Services.AddHttpClient().AddRazorComponents()
 string SensorDbPath = Path.Combine(ProgramDirectory, "sensordata.db");
 builder.Services.AddDbContext<SensorDbContext>(options => options.UseSqlite($"Data Source={SensorDbPath}"));
 
-var app = builder.Build();
+// 赤外線送信はすべて AircondService 経由にして直列化する。スケジューラからも使えるよう
+// DI にも登録しておく。
 var automationConfig = new AutomationConfigManager();
-DateTime TimerStarted = DateTime.Now;
+var aircondService = new AircondService(configManager, automationConfig, factory.CreateLogger<AircondService>());
+builder.Services.AddSingleton(aircondService);
+
+var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
@@ -38,21 +42,23 @@ using (var scope = app.Services.CreateScope())
 }
 
 // サーキュレーターの LIRC 設定(circulator.conf)を起動時に生成・配置しておく
-await IrSending.EnsureCirculatorConf(circulatorConfigManager.Config);
+await aircondService.EnsureCirculatorConfAsync(circulatorConfigManager.Config);
 
+// TODO: このタイマーはスケジュール機能の実装時に ScheduleService へ置き換える。
+//       現状はエアコンへ OFF 信号を送っていない (内部状態の更新のみ)。
 Observable.Interval(TimeSpan.FromSeconds(10))
     .Select(u => configManager.controller ?? new NP081())
     .Where((c) => c.Power)
     .Where((c) => c.TimerMode != TimerMode.NONE)
-    .Where(c => DateTime.Now.Hour == TimerStarted.AddMinutes(c.TimerLength).Hour)
-    .Where(c => DateTime.Now.Minute == TimerStarted.AddMinutes(c.TimerLength).Minute)
+    .Where(c => DateTime.Now.Hour == aircondService.TimerStarted.AddMinutes(c.TimerLength).Hour)
+    .Where(c => DateTime.Now.Minute == aircondService.TimerStarted.AddMinutes(c.TimerLength).Minute)
     .Subscribe(async(c) =>
 {
     if (c.TimerMode == TimerMode.OFFTIMER)
         c.Power = false; //オフタイマならエアコンの電源ごと切れる
     c.TimerMode = TimerMode.NONE;
     if (automationConfig.Config.AircondPwrLink)
-        await IrSending.sendCirculatorSignal("power");
+        await aircondService.SendCirculatorAsync("power");
     configManager.controller = c;
     configManager.Save();
 });
@@ -77,32 +83,13 @@ app.MapGet("/acget", () =>
 });
 app.MapPost("/apiac", async (NP081 data) =>
 {
-    byte[] signalData = data.GetCurrentSignal();
-    Debug.WriteLine(Convert.ToHexString(signalData));
-
-    await IrSending.SendByte(signalData);
-
-    if (configManager.controller != null)
-    {
-        bool pwrStateChanged = data.PowerStateChanged(configManager.controller);
-        bool timerStatusChanged = data.TimerStatusChanged(configManager.controller);
-        if (automationConfig.Config.AircondPwrLink
-        && (pwrStateChanged
-        || (timerStatusChanged && (data.TimerMode == TimerMode.ONTIMER || configManager.controller.TimerMode == TimerMode.ONTIMER))
-        ))
-            await IrSending.sendCirculatorSignal("power");
-        if (timerStatusChanged && data.TimerMode != TimerMode.NONE)
-            TimerStarted = DateTime.Now;
-    }
-    configManager.controller = data;
-    configManager.Save();
-
+    await aircondService.ApplyAsync(data);
     return Results.Ok(Environment.OSVersion);
 });
 
 app.MapPost("/simplecode", async (SimpleIRCode code) =>
 {
-    await IrSending.sendCirculatorSignal(code.Id);
+    await aircondService.SendCirculatorAsync(code.Id);
     return Results.Ok("OK");
 });
 
@@ -112,14 +99,14 @@ app.MapPost("/circulatorconfig", async (CirculatorConfig cfg) =>
 {
     circulatorConfigManager.Config = cfg;
     circulatorConfigManager.Save();
-    await IrSending.EnsureCirculatorConf(cfg); // 即座に circulator.conf を再生成
+    await aircondService.EnsureCirculatorConfAsync(cfg); // 即座に circulator.conf を再生成
     return Results.Ok("OK");
 });
 
 app.MapPost("/circulatorconfig/reload", async () =>
 {
     circulatorConfigManager.Reload(); // ディスク上で編集した JSON を反映
-    await IrSending.EnsureCirculatorConf(circulatorConfigManager.Config);
+    await aircondService.EnsureCirculatorConfAsync(circulatorConfigManager.Config);
     return Results.Ok("OK");
 });
 
