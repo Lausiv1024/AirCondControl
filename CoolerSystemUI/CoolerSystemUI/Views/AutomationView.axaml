@@ -18,16 +18,6 @@
                 <ToggleSwitch Grid.Column="1" IsChecked="{Binding AircondPwrLink}"
                               OnContent="ON" OffContent="OFF" />
             </Grid>
-
-            <Grid ColumnDefinitions="*,Auto">
-                <StackPanel Grid.Column="0">
-                    <TextBlock Text="自動電源" FontSize="20" />
-                    <TextBlock Text="自動でエアコンの電源を制御" FontSize="13"
-                               Foreground="#AAAAAA" />
-                </StackPanel>
-                <ToggleSwitch Grid.Column="1" IsChecked="{Binding AircondAutoPower}"
-                              OnContent="ON" OffContent="OFF" />
-            </Grid>
         </StackPanel>
 
         <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto" Margin="0,8,0,0" ColumnSpacing="8">

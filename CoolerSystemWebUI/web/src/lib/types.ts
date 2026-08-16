@@ -44,7 +44,6 @@ export interface AircondState {
 export interface AutomationConfig {
   /** エアコンの電源に連動してサーキュレーターの電源も送る。 */
   aircondPwrLink: boolean;
-  aircondAutoPower: boolean;
 }
 
 /** GET /circulatorconfig (表示は commands のキーのみ利用)。 */

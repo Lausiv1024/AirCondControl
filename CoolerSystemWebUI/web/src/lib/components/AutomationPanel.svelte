@@ -4,7 +4,7 @@
   import { message } from '../aircond.svelte';
   import type { AutomationConfig } from '../types';
 
-  let config = $state<AutomationConfig>({ aircondPwrLink: false, aircondAutoPower: false });
+  let config = $state<AutomationConfig>({ aircondPwrLink: false });
   let busy = $state(false);
   let status = $state('');
 
@@ -51,20 +51,6 @@
         checked={config.aircondPwrLink}
         disabled={busy}
         onchange={() => toggle('aircondPwrLink')}
-      />
-    </label>
-
-    <label class="row">
-      <span class="text">
-        <span class="title">自動電源</span>
-        <span class="desc">エアコンの自動電源制御を有効にする。</span>
-      </span>
-      <input
-        type="checkbox"
-        role="switch"
-        checked={config.aircondAutoPower}
-        disabled={busy}
-        onchange={() => toggle('aircondAutoPower')}
       />
     </label>
   </div>

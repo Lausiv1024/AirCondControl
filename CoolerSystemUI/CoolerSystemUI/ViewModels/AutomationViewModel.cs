@@ -8,7 +8,7 @@ using CoolerSystemUI.Services;
 namespace CoolerSystemUI.ViewModels
 {
     /// <summary>
-    /// 自動化設定 (エアコンとサーキュレーターの電源連動 / 自動電源)。
+    /// 自動化設定 (エアコンとサーキュレーターの電源連動)。
     /// </summary>
     public partial class AutomationViewModel : ViewModelBase
     {
@@ -18,9 +18,6 @@ namespace CoolerSystemUI.ViewModels
 
         [ObservableProperty]
         private bool aircondPwrLink;
-
-        [ObservableProperty]
-        private bool aircondAutoPower;
 
         [ObservableProperty]
         private bool isBusy;
@@ -37,7 +34,6 @@ namespace CoolerSystemUI.ViewModels
             {
                 var cfg = await _api.GetAutomationAsync();
                 AircondPwrLink = cfg.AircondPwrLink;
-                AircondAutoPower = cfg.AircondAutoPower;
                 StatusMessage = "設定を取得しました";
             }
             catch (Exception ex)
@@ -60,7 +56,6 @@ namespace CoolerSystemUI.ViewModels
                 await _api.SetAutomationAsync(new AutomationConfig
                 {
                     AircondPwrLink = AircondPwrLink,
-                    AircondAutoPower = AircondAutoPower,
                 });
                 StatusMessage = "保存しました";
             }
