@@ -60,6 +60,8 @@ namespace CoolerSystemUI.Services
 
             services.AddSingleton<AircondViewModel>(sp =>
                 new AircondViewModel(sp.GetRequiredService<IAircondApiClient>(), debounceMs, pollSeconds));
+            services.AddSingleton<NextScheduleViewModel>(sp =>
+                new NextScheduleViewModel(sp.GetRequiredService<IAircondApiClient>(), pollSeconds));
             services.AddSingleton<CirculatorViewModel>();
             services.AddSingleton<AutomationViewModel>();
             services.AddSingleton<MainViewModel>();

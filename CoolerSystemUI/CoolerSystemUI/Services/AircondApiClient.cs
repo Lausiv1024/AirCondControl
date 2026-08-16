@@ -41,5 +41,9 @@ namespace CoolerSystemUI.Services
             using var res = await _http.PostAsJsonAsync("automationconfig", config, ct);
             res.EnsureSuccessStatusCode();
         }
+
+        // 予定がないときサーバーは 204 を返すので、GetFromJsonAsync は null になる。
+        public Task<NextScheduleDto?> GetNextScheduleAsync(CancellationToken ct = default)
+            => _http.GetFromJsonAsync<NextScheduleDto?>("schedule/next", ct);
     }
 }

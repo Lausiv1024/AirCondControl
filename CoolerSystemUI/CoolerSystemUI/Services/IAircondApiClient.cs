@@ -24,5 +24,11 @@ namespace CoolerSystemUI.Services
 
         /// <summary>自動化設定を保存する (POST /automationconfig)。</summary>
         Task SetAutomationAsync(AutomationConfig config, CancellationToken ct = default);
+
+        /// <summary>
+        /// 次に実行される予定を取得する (GET /schedule/next)。予定がなければ null。
+        /// 発火時刻の計算はサーバー側に任せる (キオスクは表示のみ)。
+        /// </summary>
+        Task<NextScheduleDto?> GetNextScheduleAsync(CancellationToken ct = default);
     }
 }

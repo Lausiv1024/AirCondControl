@@ -30,11 +30,19 @@
             </TabItem>
         </TabControl>
 
-        <!-- 手動消灯ボタン: タブヘッダ右側の空きスペースに配置 -->
-        <Button Content="画面OFF"
-                Command="{Binding Screen.SleepCommand}"
-                HorizontalAlignment="Right" VerticalAlignment="Top"
-                Margin="0,6,8,0" Padding="16,8" FontSize="18" MinHeight="44" />
+        <!-- タブヘッダ右側の空きスペース: 次の予定 (読み取り専用) と手動消灯ボタン -->
+        <StackPanel Orientation="Horizontal" Spacing="12"
+                    HorizontalAlignment="Right" VerticalAlignment="Top"
+                    Margin="0,6,8,0">
+            <TextBlock Text="{Binding NextSchedule.Text}"
+                       IsVisible="{Binding NextSchedule.HasNext}"
+                       VerticalAlignment="Center"
+                       MaxWidth="260" TextTrimming="CharacterEllipsis"
+                       FontSize="16" Foreground="#AAAAAA" />
+            <Button Content="画面OFF"
+                    Command="{Binding Screen.SleepCommand}"
+                    Padding="16,8" FontSize="18" MinHeight="44" />
+        </StackPanel>
 
         <!-- 消灯中の黒オーバーレイ: 全面を覆い、任意のタップで点灯する(背後 UI には伝播させない) -->
         <Border x:Name="ScreenOverlay"
