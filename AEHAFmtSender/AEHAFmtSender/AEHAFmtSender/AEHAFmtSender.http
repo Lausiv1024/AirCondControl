@@ -1,5 +1,6 @@
-﻿@AEHAFmtSender_HostAddress = http://localhost:5195
+@AEHAFmtSender_HostAddress = http://localhost:5195
 #http://localhost:5195
+# Rpi: http://192.168.1.22
 POST {{AEHAFmtSender_HostAddress}}/apiac
 Content-Type: application/json
 {
@@ -9,4 +10,29 @@ Content-Type: application/json
 
 GET {{AEHAFmtSender_HostAddress}}/acget
 
+###
+
+GET {{AEHAFmtSender_HostAddress}}/automationconfig
+
+###
+
+GET {{AEHAFmtSender_HostAddress}}/scheduleconfig
+
+###
+
+POST {{AEHAFmtSender_HostAddress}}/scheduleconfig
+Content-Type: application/json
+{
+  "Enabled": true,
+  "Rules":[
+    {
+      "Id": "036732df-798b-4dcb-a91b-9429d6949a48",
+      "Enabled": true,
+      "Name": "Test",
+      "Date" : "2026-08-14",
+      "At": "18:30",
+      "Degrees": 26
+    }
+  ]
+}
 ###

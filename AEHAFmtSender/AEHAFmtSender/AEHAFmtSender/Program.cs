@@ -7,6 +7,7 @@ using System.Reflection;
 using AEHAFmtSender;
 using R3;
 using AEHAFmtSender.Shared;
+using AEHAFmtSender.Shared.Models;
 using AEHAFmtSender.Automation;
 using AEHAFmtSender.SensorData;
 using Microsoft.EntityFrameworkCore;
@@ -31,8 +32,16 @@ builder.Services.AddDbContext<SensorDbContext>(options => options.UseSqlite($"Da
 // 赤外線送信はすべて AircondService 経由にして直列化する。スケジューラからも使えるよう
 // DI にも登録しておく。
 var automationConfig = new AutomationConfigManager();
-var aircondService = new AircondService(configManager, automationConfig, factory.CreateLogger<AircondService>());
+var scheduleConfig = new ScheduleConfigManager();
+var scheduleState = new ScheduleStateManager();
+var aircondService = new AircondService(
+    configManager, automationConfig, scheduleState, factory.CreateLogger<AircondService>());
+
 builder.Services.AddSingleton(aircondService);
+builder.Services.AddSingleton(scheduleConfig);
+builder.Services.AddSingleton(scheduleState);
+builder.Services.AddHostedService(sp => new ScheduleService(
+    aircondService, scheduleConfig, scheduleState, sp.GetRequiredService<ILogger<ScheduleService>>()));
 
 var app = builder.Build();
 
@@ -44,24 +53,7 @@ using (var scope = app.Services.CreateScope())
 // サーキュレーターの LIRC 設定(circulator.conf)を起動時に生成・配置しておく
 await aircondService.EnsureCirculatorConfAsync(circulatorConfigManager.Config);
 
-// TODO: このタイマーはスケジュール機能の実装時に ScheduleService へ置き換える。
-//       現状はエアコンへ OFF 信号を送っていない (内部状態の更新のみ)。
-Observable.Interval(TimeSpan.FromSeconds(10))
-    .Select(u => configManager.controller ?? new NP081())
-    .Where((c) => c.Power)
-    .Where((c) => c.TimerMode != TimerMode.NONE)
-    .Where(c => DateTime.Now.Hour == aircondService.TimerStarted.AddMinutes(c.TimerLength).Hour)
-    .Where(c => DateTime.Now.Minute == aircondService.TimerStarted.AddMinutes(c.TimerLength).Minute)
-    .Subscribe(async(c) =>
-{
-    if (c.TimerMode == TimerMode.OFFTIMER)
-        c.Power = false; //オフタイマならエアコンの電源ごと切れる
-    c.TimerMode = TimerMode.NONE;
-    if (automationConfig.Config.AircondPwrLink)
-        await aircondService.SendCirculatorAsync("power");
-    configManager.controller = c;
-    configManager.Save();
-});
+// タイマーとスケジュールの処理は ScheduleService (BackgroundService) が担当する。
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -122,6 +114,57 @@ app.MapPost("/automationconfig", (AutomationConfig cfg) =>
     automationConfig.Config = cfg;
     logger.LogInformation("Automation Config Updated");
     automationConfig.Save();
+});
+
+app.MapGet("/scheduleconfig", () => scheduleConfig.Config);
+
+app.MapPost("/scheduleconfig", (ScheduleConfig cfg) =>
+{
+    scheduleConfig.Config = cfg;
+    logger.LogInformation("Schedule Config Updated ({Count} rules)", cfg.Rules.Count);
+    scheduleConfig.Save();
+});
+
+// サーバー側でカウントしているタイマーの残り。UI の残り時間表示用。
+app.MapGet("/timer", () => new TimerStatus
+{
+    OffAtUtc = scheduleState.State.OffAtUtc,
+    OnAtUtc = scheduleState.State.OnAtUtc,
+});
+
+// 次に実行される予定。スケジュールとタイマーのうち先に発火する方を返す。
+// キオスク端末 (CoolerSystemUI) の常時表示用で、編集はしないので読み取り専用。
+app.MapGet("/schedule/next", () =>
+{
+    var candidates = new List<NextScheduleDto>();
+
+    if (scheduleConfig.Config.Enabled
+        && ScheduleEvaluator.NextFire(scheduleConfig.Config.Rules, DateTime.Now) is ScheduledFire fire)
+    {
+        candidates.Add(new NextScheduleDto
+        {
+            Kind = NextScheduleKind.Schedule,
+            // FiresAt はローカルの壁時計時刻 (Kind は Unspecified)。UTC に直して返す。
+            FiresAtUtc = DateTime.SpecifyKind(fire.FiresAt, DateTimeKind.Local).ToUniversalTime(),
+            Name = fire.Rule.Name,
+            Power = fire.Rule.Power,
+            OperationMode = fire.Rule.OperationMode,
+            Degrees = fire.Rule.Degrees,
+            Dehumidification = fire.Rule.Dehumidification,
+            OffAfterMinutes = fire.Rule.OffAfterMinutes,
+        });
+    }
+
+    if (scheduleState.State.OffAtUtc is DateTime offAt)
+        candidates.Add(new NextScheduleDto { Kind = NextScheduleKind.OffTimer, FiresAtUtc = offAt });
+
+    if (scheduleState.State.OnAtUtc is DateTime onAt)
+        candidates.Add(new NextScheduleDto { Kind = NextScheduleKind.OnTimer, FiresAtUtc = onAt });
+
+    if (candidates.Count == 0)
+        return Results.NoContent();
+
+    return Results.Ok(candidates.OrderBy(c => c.FiresAtUtc).First());
 });
 
 app.MapSensorEndpoints();
