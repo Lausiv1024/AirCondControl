@@ -33,6 +33,10 @@ public sealed class RpiProxyOptions
         "POST automationconfig",
         "GET sensordata/latest",
         "GET sensordata/history",
+        "GET scheduleconfig",
+        "POST scheduleconfig",
+        "GET timer",
+        "GET schedule/next",
     ];
 
     /// <summary>

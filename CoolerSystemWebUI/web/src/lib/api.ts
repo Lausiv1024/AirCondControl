@@ -1,4 +1,11 @@
-import type { AircondState, AutomationConfig, CirculatorConfig, SensorReading } from './types';
+import type {
+  AircondState,
+  AutomationConfig,
+  CirculatorConfig,
+  ScheduleConfig,
+  SensorReading,
+  TimerStatus,
+} from './types';
 
 /**
  * バックエンド (ASP.NET) の /api/* を叩く。ASP.NET はこれを RPi の AEHAFmtSender へそのまま中継する。
@@ -68,6 +75,10 @@ export const api = {
 
   getAutomation: () => request<AutomationConfig>('automationconfig') as Promise<AutomationConfig>,
   setAutomation: (config: AutomationConfig) => postJson('automationconfig', config),
+
+  getSchedule: () => request<ScheduleConfig>('scheduleconfig') as Promise<ScheduleConfig>,
+  setSchedule: (config: ScheduleConfig) => postJson('scheduleconfig', config),
+  getTimer: () => request<TimerStatus>('timer') as Promise<TimerStatus>,
 
   getLatestSensor: () => request<SensorReading>('sensordata/latest'),
   getSensorHistory: (minutes = 1440, limit = 500) =>

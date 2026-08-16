@@ -2,13 +2,15 @@
   import AircondPanel from './lib/components/AircondPanel.svelte';
   import AutomationPanel from './lib/components/AutomationPanel.svelte';
   import CirculatorPanel from './lib/components/CirculatorPanel.svelte';
+  import SchedulePanel from './lib/components/SchedulePanel.svelte';
   import SensorPanel from './lib/components/SensorPanel.svelte';
 
-  type Tab = 'aircond' | 'circulator' | 'automation' | 'sensor';
+  type Tab = 'aircond' | 'circulator' | 'schedule' | 'automation' | 'sensor';
 
   const TABS: { id: Tab; label: string }[] = [
     { id: 'aircond', label: 'エアコン' },
     { id: 'circulator', label: 'サーキュレーター' },
+    { id: 'schedule', label: '予約' },
     { id: 'automation', label: '自動化' },
     { id: 'sensor', label: 'センサー' },
   ];
@@ -50,6 +52,8 @@
       <AircondPanel />
     {:else if tab === 'circulator'}
       <CirculatorPanel />
+    {:else if tab === 'schedule'}
+      <SchedulePanel />
     {:else if tab === 'automation'}
       <AutomationPanel />
     {:else}

@@ -64,6 +64,61 @@ export interface SensorReading {
   co2Ppm: number;
 }
 
+/**
+ * 繰り返す曜日 (ビットフラグ)。日曜が最下位ビットで、DayOfWeek の並びと一致する。
+ * サーバ側 AEHAFmtSender.Shared.Models.DayFlags と対応。
+ */
+export const DayFlag = {
+  Sunday: 1 << 0,
+  Monday: 1 << 1,
+  Tuesday: 1 << 2,
+  Wednesday: 1 << 3,
+  Thursday: 1 << 4,
+  Friday: 1 << 5,
+  Saturday: 1 << 6,
+} as const;
+
+/** 日曜始まりのラベル。添字がそのままビット位置になる。 */
+export const DAY_LABELS = ['日', '月', '火', '水', '木', '金', '土'] as const;
+
+export const DAYS_NONE = 0;
+export const DAYS_WEEKDAYS =
+  DayFlag.Monday | DayFlag.Tuesday | DayFlag.Wednesday | DayFlag.Thursday | DayFlag.Friday;
+export const DAYS_WEEKEND = DayFlag.Sunday | DayFlag.Saturday;
+export const DAYS_EVERY = DAYS_WEEKDAYS | DAYS_WEEKEND;
+
+/**
+ * スケジュール 1 件。null の項目は「変更しない」。
+ * at は "HH:mm"、date は "yyyy-MM-dd" (input[type=time]/[type=date] と同じ形式)。
+ */
+export interface ScheduleRule {
+  id: string;
+  enabled: boolean;
+  name: string;
+  at: string;
+  /** 繰り返す曜日。0 なら date の単発予約。 */
+  days: number;
+  date: string | null;
+  power: boolean | null;
+  operationMode: OperationMode | null;
+  degrees: number | null;
+  dehumidification: Dehumidification | null;
+  /** 発火後に電源を切るまでの分数。null なら現在のタイマー設定を引き継ぐ。 */
+  offAfterMinutes: number | null;
+}
+
+/** GET/POST /scheduleconfig */
+export interface ScheduleConfig {
+  enabled: boolean;
+  rules: ScheduleRule[];
+}
+
+/** GET /timer サーバ側でカウントしているタイマーの発火予定時刻。 */
+export interface TimerStatus {
+  offAtUtc: string | null;
+  onAtUtc: string | null;
+}
+
 export const MIN_DEGREE = 16;
 export const MAX_DEGREE = 31;
 export const MIN_TIMER = 30;
